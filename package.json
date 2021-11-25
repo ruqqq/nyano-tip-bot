@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@dev-ptera/nano-node-rpc": "^2.0.2",
+    "dotenv": "^10.0.0",
     "grammy": "^1.4.2",
     "nanocurrency": "^2.5.0"
   }
