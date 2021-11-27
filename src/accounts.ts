@@ -31,3 +31,18 @@ export async function getAccountByAddress(address: string): Promise<Account | nu
     return null;
   }
 }
+
+export async function saveAccount(account: Account): Promise<void> {
+  try {
+    await db.put(`tg-${account.tgUserId}`, account);
+    await db.put(`address-${account.address}`, account);
+  } catch(e) {
+    try {
+      await db.del(`tg-${account.tgUserId}`);
+      await db.del(`address-${account.address}`);
+    } catch (e) {
+      console.warn(e);
+    }
+    throw e;
+  }
+}
