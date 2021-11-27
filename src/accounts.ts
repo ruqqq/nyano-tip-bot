@@ -8,7 +8,7 @@ export type Account = {
   withdrawalAddress: null | string;
 }
 
-export async function getAccountByTgUserId(tgUserId: string): Promise<Account | null> {
+async function getAccountByTgUserId(tgUserId: string): Promise<Account | null> {
   try {
     return await db.get(`tg-${tgUserId}`);
   } catch (e) {
@@ -20,7 +20,7 @@ export async function getAccountByTgUserId(tgUserId: string): Promise<Account | 
   }
 }
 
-export async function getAccountByAddress(address: string): Promise<Account | null> {
+async function getAccountByAddress(address: string): Promise<Account | null> {
   try {
     return await db.get(`address-${address}`);
   } catch (e) {
@@ -32,7 +32,7 @@ export async function getAccountByAddress(address: string): Promise<Account | nu
   }
 }
 
-export async function saveAccount(account: Account): Promise<void> {
+async function saveAccount(account: Account): Promise<void> {
   try {
     await db.put(`tg-${account.tgUserId}`, account);
     await db.put(`address-${account.address}`, account);
@@ -45,4 +45,10 @@ export async function saveAccount(account: Account): Promise<void> {
     }
     throw e;
   }
+}
+
+export const Accounts = {
+  getAccountByTgUserId,
+  getAccountByAddress,
+  saveAccount,
 }

@@ -1,4 +1,4 @@
-import { Account, getAccountByAddress, getAccountByTgUserId, saveAccount } from "./accounts";
+import { Account, Accounts } from "./accounts";
 import { db } from "./db";
 
 describe("Accounts", () => {
@@ -21,13 +21,13 @@ describe("Accounts", () => {
 
   describe("get account by tg userId", () => {
     it("should return null when no account found", async () => {
-      const account = await getAccountByTgUserId("does-not-exists");
+      const account = await Accounts.getAccountByTgUserId("does-not-exists");
 
       expect(account).toBeNull();
     });
 
     it("should return account when account exists", async () => {
-      const account = await getAccountByTgUserId(existingAccount.tgUserId);
+      const account = await Accounts.getAccountByTgUserId(existingAccount.tgUserId);
 
       expect(account).toEqual(existingAccount);
     });
@@ -35,13 +35,13 @@ describe("Accounts", () => {
 
   describe("get account by address", () => {
     it("should return null when no account found", async () => {
-      const account = await getAccountByAddress("does-not-exists");
+      const account = await Accounts.getAccountByAddress("does-not-exists");
 
       expect(account).toBeNull();
     });
 
     it("should return account when account exists", async () => {
-      const account = await getAccountByAddress(existingAccount.address);
+      const account = await Accounts.getAccountByAddress(existingAccount.address);
 
       expect(account).toEqual(existingAccount);
     });
@@ -64,7 +64,7 @@ describe("Accounts", () => {
     });
 
     it("should save account and reference-able from both tgUserId and address", async () => {
-      await saveAccount(newAccount);
+      await Accounts.saveAccount(newAccount);
 
       expect(await db.get(`tg-${newAccount.tgUserId}`)).not.toBeNull();
       expect(await db.get(`address-${newAccount.address}`)).not.toBeNull();
