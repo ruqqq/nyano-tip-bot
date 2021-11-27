@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev bot.ts",
+    "dev": "ts-node-dev src/bot.ts",
     "lint": "eslint --ignore-path .eslintignore --ext .js,.ts .",
     "test": "jest",
     "prepare": "husky install"
