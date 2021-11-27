@@ -1,12 +1,7 @@
-import level from "level";
 import { NotFoundError } from "level-errors";
+import { db } from "./db";
 
-const db = level(
-  process.env.DB_FILE ?? "./db",
-  { valueEncoding: "json" },
-);
-
-type Account = {
+export type Account = {
   tgUserId: string;
   seedIndex: number;
   address: string;
