@@ -1,4 +1,4 @@
-import { Account, getAccountByTgUserId } from "./accounts";
+import { Account, getAccountByAddress, getAccountByTgUserId } from "./accounts";
 import { db } from "./db";
 
 describe("Accounts", () => {
@@ -27,9 +27,23 @@ describe("Accounts", () => {
     });
 
     it("should return account when account exists", async () => {
-      const account = await getAccountByTgUserId("test-tgUserId");
+      const account = await getAccountByTgUserId(existingAccount.tgUserId);
 
-      expect(account).not.toBeNull();
+      expect(account).toEqual(existingAccount);
+    });
+  });
+
+  describe("get account by address", () => {
+    it("should return null when no account found", async () => {
+      const account = await getAccountByAddress("does-not-exists");
+
+      expect(account).toBeNull();
+    });
+
+    it("should return account when account exists", async () => {
+      const account = await getAccountByAddress(existingAccount.address);
+
+      expect(account).toEqual(existingAccount);
     });
   });
 });

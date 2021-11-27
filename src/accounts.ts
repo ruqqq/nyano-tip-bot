@@ -19,3 +19,15 @@ export async function getAccountByTgUserId(tgUserId: string): Promise<Account | 
     return null;
   }
 }
+
+export async function getAccountByAddress(address: string): Promise<Account | null> {
+  try {
+    return await db.get(`address-${address}`);
+  } catch (e) {
+    if (!(e instanceof NotFoundError)) {
+      throw e;
+    }
+
+    return null;
+  }
+}
