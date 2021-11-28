@@ -17,6 +17,7 @@ describe("Accounts", () => {
   afterEach(async () => {
     await db.del(`tg-${existingAccount.tgUserId}`);
     await db.del(`address-${existingAccount.address}`);
+    await db.del("last-seed-index");
   });
 
   describe("get account by tg userId", () => {
@@ -69,5 +70,19 @@ describe("Accounts", () => {
       expect(await db.get(`tg-${newAccount.tgUserId}`)).not.toBeNull();
       expect(await db.get(`address-${newAccount.address}`)).not.toBeNull();
     });
+  });
+
+  describe("getAndIncrementLastSeedIndex", () => {
+    it("should atomically increment last-seed-index", async () => {
+      await Promise.all([
+        Accounts.getAndIncrementLastSeedIndex(),
+        Accounts.getAndIncrementLastSeedIndex(),
+        Accounts.getAndIncrementLastSeedIndex(),
+      ]);
+
+      const seedIndex = await Accounts.getAndIncrementLastSeedIndex();
+
+      expect(seedIndex).toEqual(4);
+    })
   });
 });
