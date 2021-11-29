@@ -61,22 +61,24 @@ describe("BotService", () => {
     it("should tip recipient 0.0001 nano when '!tip 0.0001' is sent as a reply to a message", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser();
+      const message = createTgMessage({
+        from: user1,
+        text: "!tip 0.0001",
+        reply_to_message: {
+          ...createTgMessage(),
+          from: user2,
+          reply_to_message: undefined,
+        },
+      });
+
       const ctx = createContext(
         createTgUpdate({
-          message: createTgMessage({
-            from: user1,
-            text: "!tip 0.0001",
-            reply_to_message: {
-              ...createTgMessage(),
-              from: user2,
-              reply_to_message: undefined,
-            },
-          }),
+          message,
         })
       );
       await BotService.handleMessage(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith("Tipped!");
+      expect(ctx.reply).toHaveBeenCalledWith("0.0001 NANO sent!", { reply_to_message_id: message.message_id });
       expect(TipService.tipUser).toHaveBeenCalledWith(
         `${user1.id}`,
         `${user2.id}`,
@@ -87,25 +89,26 @@ describe("BotService", () => {
     it("should reply that the user has insufficient balance and prompt to top up", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser();
+      const message = createTgMessage({
+        from: user1,
+        text: "!tip 0.0001",
+        reply_to_message: {
+          ...createTgMessage(),
+          from: user2,
+          reply_to_message: undefined,
+        },
+      });
       when(TipService.tipUser)
         .calledWith( `${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
         .mockRejectedValue(BusinessErrors.INSUFFICIENT_BALANCE);
       const ctx = createContext(
         createTgUpdate({
-          message: createTgMessage({
-            from: user1,
-            text: "!tip 0.0001",
-            reply_to_message: {
-              ...createTgMessage(),
-              from: user2,
-              reply_to_message: undefined,
-            },
-          }),
+          message,
         })
       );
       await BotService.handleMessage(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith("Insufficient balance. Please top-up and try again.");
+      expect(ctx.reply).toHaveBeenCalledWith("Insufficient balance. Please top-up and try again.", { reply_to_message_id: message.message_id });
     });
   });
 });

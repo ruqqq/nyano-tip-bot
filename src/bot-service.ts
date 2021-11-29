@@ -15,10 +15,14 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
 
     try {
       await TipService.tipUser(from, to, amount);
-      ctx.reply("Tipped!");
+      ctx.reply(`${matches[1]} NANO sent!`, {
+        reply_to_message_id: ctx.update.message.message_id,
+      });
     } catch (e) {
       if (e === BusinessErrors.INSUFFICIENT_BALANCE) {
-        ctx.reply("Insufficient balance. Please top-up and try again.");
+        ctx.reply("Insufficient balance. Please top-up and try again.", {
+          reply_to_message_id: ctx.update.message.message_id,
+        });
       } else {
         throw e;
       }
