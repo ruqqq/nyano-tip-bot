@@ -114,7 +114,7 @@ describe("BotService", () => {
         `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip! Click the button below to learn how to withdraw your tip.`, {
         parse_mode: "MarkdownV2",
         reply_markup: {
-          inline_keyboard: [[{ text: "Withdraw", url: "" }]],
+          inline_keyboard: [[{ text: "Withdraw", url: "https://t.me/bot_username?start=withdraw" }]],
         },
       });
     });
@@ -150,6 +150,10 @@ function createContext(update: Update): MnanoContext {
   return {
     update,
     reply: jest.fn(),
+    me: {
+      id: -1,
+      username: "bot_username",
+    },
   } as any;
 }
 

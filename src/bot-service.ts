@@ -38,7 +38,7 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
         {
           parse_mode: "MarkdownV2",
           reply_markup: {
-            inline_keyboard: [[{ text: "Withdraw", url: "" }]],
+            inline_keyboard: [[{ text: "Withdraw", url: `https://t.me/${ctx.me.username}?start=withdraw` }]],
           },
         }
       );
