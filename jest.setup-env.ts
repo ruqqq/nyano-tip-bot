@@ -1,1 +1,1 @@
-process.env.DB_FILE = "./test-db";
+process.env.NANO_WALLET_SEED = "NANO_WALLET_SEED_TEST";

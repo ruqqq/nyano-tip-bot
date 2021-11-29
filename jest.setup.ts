@@ -1,4 +1,8 @@
-import { db } from "./src/db";
-
-beforeAll(async () => db.open());
-afterAll(async () => db.close());
+jest.mock("./src/db", () => {
+  const level = jest.requireActual("level-mem");
+  return {
+    db: level(
+      { valueEncoding: "json" },
+    ),
+  }
+});
