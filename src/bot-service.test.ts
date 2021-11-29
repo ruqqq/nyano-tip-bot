@@ -86,6 +86,38 @@ describe("BotService", () => {
       );
     });
 
+    it("should send additional prompt if it is the first time the recipient receives a tip", async () => {
+      const user1 = createTgUser();
+      const user2 = createTgUser();
+      const message = createTgMessage({
+        from: user1,
+        text: "!tip 0.0001",
+        reply_to_message: {
+          ...createTgMessage(),
+          from: user2,
+          reply_to_message: undefined,
+        },
+      });
+      when(TipService.getBalance)
+        .calledWith(`${user2.id}`)
+        .mockResolvedValue(0n);
+
+      const ctx = createContext(
+        createTgUpdate({
+          message,
+        })
+      );
+      await BotService.handleMessage(ctx);
+
+      expect(ctx.reply).toHaveBeenCalledWith(
+        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip! Click the button below to learn how to withdraw your tip.`, {
+        parse_mode: "MarkdownV2",
+        reply_markup: {
+          inline_keyboard: [[{ text: "Withdraw", url: "" }]],
+        },
+      });
+    });
+
     it("should reply that the user has insufficient balance and prompt to top up", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser();
@@ -150,10 +182,11 @@ function createTgGroupChat(
 }
 
 function createTgUser(overrides?: Partial<User>): User {
+  const id = new Date().getTime();
   return {
-    id: new Date().getTime(),
+    id,
     is_bot: false,
-    first_name: "",
+    first_name: `User ${id}`,
     ...overrides,
   };
 }
