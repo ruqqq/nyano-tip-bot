@@ -1,6 +1,6 @@
 
 import { BlocksInfoResponseContents, NanoClient } from '@dev-ptera/nano-node-rpc';
-import { derivePublicKey, CommonBlockData, OpenBlockData, createBlock, deriveAddress, ReceiveBlockData, SendBlockData, BlockRepresentation } from 'nanocurrency';
+import { derivePublicKey, CommonBlockData, OpenBlockData, createBlock, deriveAddress, ReceiveBlockData, SendBlockData, BlockRepresentation, deriveSecretKey } from 'nanocurrency';
 
 const client = new NanoClient({
   url: process.env.NANO_NODE_URL,
@@ -11,7 +11,12 @@ const client = new NanoClient({
   }
 });
 
-export async function receive(
+async function getBalance(address: string): Promise<bigint> {
+  const result = await client.account_balance(address);
+  return BigInt(result.balance);
+}
+
+async function receive(
   secretKey: string,
   fromBlock: string,
   amount: bigint,
@@ -46,7 +51,7 @@ export async function receive(
   };
 }
 
-export async function send(
+async function send(
   secretKey: string,
   toAddress: string,
   amount: bigint,
@@ -76,14 +81,29 @@ export async function send(
   };
 }
 
-export async function processPendingBlocks(secretKey: string) {
+function extractAccountMetadata(secretKey: string) {
+  const publicKey = derivePublicKey(secretKey);
+  const address = deriveAddress(publicKey, { useNanoPrefix: true });
+
+  return {
+    publicKey,
+    secretKey,
+    address,
+  }
+}
+
+function getSecretKeyFromSeed(seed: string, index: number): string {
+  return deriveSecretKey(seed, index);
+}
+
+/* async function processPendingBlocks(secretKey: string) {
   const address = deriveAddress(derivePublicKey(secretKey), { useNanoPrefix: true });
   const pendingResult = await client.accounts_pending([address], 10, { source: true });
   const blocksMap = (pendingResult.blocks[address] ?? {}) as { [key: string]: { amount: string; source: string; } };
   return await Promise.all(
     Object.keys(blocksMap).map(hash => receive(secretKey, hash, BigInt(blocksMap[hash].amount))),
   );
-}
+} */
 
 async function workGenerate(hash: string) {
   const response = await client._send('work_generate', {
@@ -120,13 +140,10 @@ async function getMostRecentOnlineRepresentative(): Promise<string> {
   return representatives[0];
 }
 
-function extractAccountMetadata(secretKey: string) {
-  const publicKey = derivePublicKey(secretKey);
-  const address = deriveAddress(publicKey, { useNanoPrefix: true });
-
-  return {
-    publicKey,
-    secretKey,
-    address,
-  }
-}
+export const Nano = {
+  getBalance,
+  receive,
+  send,
+  extractAccountMetadata,
+  getSecretKeyFromSeed,
+};
