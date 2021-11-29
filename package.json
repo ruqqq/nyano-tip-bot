@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev src/bot.ts",
+    "tsc": "tsc --noEmit",
     "lint": "eslint --ignore-path .eslintignore --ext .js,.ts .",
     "test": "jest",
     "prepare": "husky install"
