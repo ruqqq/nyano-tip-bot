@@ -17,8 +17,9 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
     const prevToBalance = await TipService.getBalance(toId);
 
     try {
-      await TipService.tipUser(fromId, toId, amount);
-      ctx.reply(`${matches[1]} NANO sent!`, {
+      const url = await TipService.tipUser(fromId, toId, amount);
+      ctx.reply(`[${matches[1]}](${url}) NANO sent!`, {
+        parse_mode: "MarkdownV2",
         reply_to_message_id: ctx.update.message.message_id,
       });
     } catch (e) {

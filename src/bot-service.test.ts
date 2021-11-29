@@ -70,6 +70,9 @@ describe("BotService", () => {
           reply_to_message: undefined,
         },
       });
+      when(TipService.tipUser)
+        .calledWith(`${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
+        .mockResolvedValue("http://block-url.com");
 
       const ctx = createContext(
         createTgUpdate({
@@ -78,11 +81,9 @@ describe("BotService", () => {
       );
       await BotService.handleMessage(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith("0.0001 NANO sent!", { reply_to_message_id: message.message_id });
-      expect(TipService.tipUser).toHaveBeenCalledWith(
-        `${user1.id}`,
-        `${user2.id}`,
-        100000000000000000000000000n
+      expect(ctx.reply).toHaveBeenCalledWith(
+        "[0.0001](http://block-url.com) NANO sent!",
+        { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
       );
     });
 
