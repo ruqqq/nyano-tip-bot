@@ -96,6 +96,10 @@ function getSecretKeyFromSeed(seed: string, index: number): string {
   return deriveSecretKey(seed, index);
 }
 
+function getBlockExplorerUrl(hash: string): string {
+  return `https://nanocrawler.cc/explorer/block/${hash}`;
+}
+
 /* async function processPendingBlocks(secretKey: string) {
   const address = deriveAddress(derivePublicKey(secretKey), { useNanoPrefix: true });
   const pendingResult = await client.accounts_pending([address], 10, { source: true });
@@ -146,4 +150,5 @@ export const Nano = {
   send,
   extractAccountMetadata,
   getSecretKeyFromSeed,
+  getBlockExplorerUrl,
 };

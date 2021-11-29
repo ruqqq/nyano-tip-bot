@@ -95,17 +95,24 @@ describe("TipService", () => {
       when(Nano.extractAccountMetadata)
         .calledWith(account1KeyMetadata.secretKey)
         .mockReturnValue(account1KeyMetadata);
+      when(Nano.send)
+        .calledWith(
+          account1KeyMetadata.secretKey,
+          account2.address,
+          1n,
+        )
+        .mockResolvedValue( { block: { hash: "hash" } } as any);
+      when(Nano.getBlockExplorerUrl)
+        .calledWith(expect.anything())
+        .mockImplementation((hash) => `http://${hash}`);
 
-      await expect(TipService.tipUser(
+      const url = await TipService.tipUser(
         account1.tgUserId,
         account2.tgUserId,
         1n,
-      )).resolves.not.toThrow();
-      expect(Nano.send).toHaveBeenCalledWith(
-        account1KeyMetadata.secretKey,
-        account2.address,
-        1n,
       );
+
+      expect(url).toEqual("http://hash");
     });
 
     it("should automatically create account for tipper when it does not exists", async () => {

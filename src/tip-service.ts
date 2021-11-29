@@ -24,11 +24,13 @@ async function tipUser(
     Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, fromAccount.seedIndex),
   );
 
-  await Nano.send(
+  const { block } = await Nano.send(
     fromKeyMetadata.secretKey,
     toAccount.address,
     amount,
   );
+
+  return Nano.getBlockExplorerUrl(block.hash);
 }
 
 async function getBalance(tgUserId: string): Promise<bigint> {
