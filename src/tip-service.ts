@@ -4,7 +4,13 @@ import { Nano } from "./nano";
 
 const NANO_WALLET_SEED = process.env.NANO_WALLET_SEED as string;
 if (!NANO_WALLET_SEED) {
-  throw Error("NANO_WALLET_SEED cannot be empty.");
+  generateAndPrintSeed();
+  throw Error(`NANO_WALLET_SEED cannot be empty.`);
+}
+
+async function generateAndPrintSeed() {
+  const seed = await Nano.generateSeed();
+  console.log(`Generated seed: ${seed}`)
 }
 
 async function tipUser(

@@ -1,6 +1,17 @@
 
 import { BlocksInfoResponseContents, NanoClient } from '@dev-ptera/nano-node-rpc';
-import { derivePublicKey, CommonBlockData, OpenBlockData, createBlock, deriveAddress, ReceiveBlockData, SendBlockData, BlockRepresentation, deriveSecretKey } from 'nanocurrency';
+import {
+  derivePublicKey,
+  CommonBlockData,
+  OpenBlockData,
+  createBlock,
+  deriveAddress,
+  ReceiveBlockData,
+  SendBlockData,
+  BlockRepresentation,
+  deriveSecretKey,
+  generateSeed,
+} from "nanocurrency";
 
 const client = new NanoClient({
   url: process.env.NANO_NODE_URL,
@@ -151,4 +162,5 @@ export const Nano = {
   extractAccountMetadata,
   getSecretKeyFromSeed,
   getBlockExplorerUrl,
+  generateSeed,
 };
