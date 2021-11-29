@@ -82,7 +82,7 @@ describe("Accounts", () => {
 
       const seedIndex = await Accounts.getAndIncrementLastSeedIndex();
 
-      expect(seedIndex).toEqual(4);
+      expect(seedIndex).toEqual(1004);
     })
   });
 });

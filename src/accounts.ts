@@ -10,6 +10,7 @@ export type Account = {
 }
 
 const lastSeedIndexLock = new AwaitLock();
+const START_SEED_INDEX = 1001;
 
 async function getAccountByTgUserId(tgUserId: string): Promise<Account | null> {
   try {
@@ -47,7 +48,7 @@ async function getAndIncrementLastSeedIndex(): Promise<number> {
       }
     }
     if (!index) {
-      index = 1;
+      index = START_SEED_INDEX;
     }
     await db.put("last-seed-index", index + 1);
   } finally {
