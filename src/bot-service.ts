@@ -9,6 +9,12 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
     if (!ctx.update.message.from || !ctx.update.message.reply_to_message.from) {
       return;
     }
+    if (ctx.update.message.from.is_bot) {
+      return;
+    }
+    if (ctx.update.message.reply_to_message.from.is_bot) {
+      return;
+    }
     const from = ctx.update.message.from;
     const fromId = `${from.id}`;
     const to = ctx.update.message.reply_to_message.from;

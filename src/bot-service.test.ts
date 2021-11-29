@@ -58,6 +58,48 @@ describe("BotService", () => {
       expect(ctx.reply).not.toHaveBeenCalled();
     });
 
+    it("should not tip if sender is a bot", async () => {
+      const user1 = createTgUser();
+      const botUser = createTgUser({ is_bot: true });
+      const ctx = createContext(
+        createTgUpdate({
+          message: createTgMessage({
+            from: botUser,
+            text: "!tip 0.0001",
+            reply_to_message: {
+              ...createTgMessage(),
+              from: user1,
+              reply_to_message: undefined,
+            },
+          }),
+        })
+      );
+      await BotService.handleMessage(ctx);
+
+      expect(ctx.reply).not.toHaveBeenCalled();
+    });
+
+    it("should not tip if recipient is a bot", async () => {
+      const user1 = createTgUser();
+      const botUser = createTgUser({ is_bot: true });
+      const ctx = createContext(
+        createTgUpdate({
+          message: createTgMessage({
+            from: user1,
+            text: "!tip 0.0001",
+            reply_to_message: {
+              ...createTgMessage(),
+              from: botUser,
+              reply_to_message: undefined,
+            },
+          }),
+        })
+      );
+      await BotService.handleMessage(ctx);
+
+      expect(ctx.reply).not.toHaveBeenCalled();
+    });
+
     it("should tip recipient 0.0001 nano when '!tip 0.0001' is sent as a reply to a message", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser();
