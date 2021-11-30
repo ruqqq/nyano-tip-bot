@@ -68,7 +68,7 @@ describe("TipService", () => {
 
       const url = await TipService.getLinkForTopUp(account1.tgUserId);
 
-      expect(url).toEqual("https://paynano.me/nanoAddress1?amount=0.001");
+      expect(url).toEqual("https://paynano.me/nanoAddress1");
     });
   });
 

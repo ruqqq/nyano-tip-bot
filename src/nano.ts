@@ -192,6 +192,7 @@ function subscribeToConfirmations(cb: (block: BlockRepresentation) => Promise<vo
       "ack": true,
     };
     ws.send(JSON.stringify(confirmation_subscription));
+    console.log("Listening to confirmations...")
   });
 
   ws.addEventListener("error", (error) => {
