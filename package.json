@@ -20,6 +20,7 @@
     "@types/level": "^6.0.0",
     "@types/levelup": "^4.3.3",
     "@types/memdown": "^3.0.0",
+    "@types/ws": "^8.2.1",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "eslint": "^8.3.0",
@@ -41,7 +42,9 @@
     "dotenv": "^10.0.0",
     "grammy": "^1.4.2",
     "level": "^7.0.1",
-    "nanocurrency": "^2.5.0"
+    "nanocurrency": "^2.5.0",
+    "reconnecting-websocket": "^4.4.0",
+    "ws": "^8.3.0"
   },
   "lint-staged": {
     "*.{js,ts}": "eslint --cache --fix",

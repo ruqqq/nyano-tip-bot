@@ -1,3 +1,4 @@
+import { Bot } from "grammy";
 import { convert, Unit } from "nanocurrency";
 import { MnanoContext } from "./context";
 import { BusinessErrors } from "./errors";
@@ -85,27 +86,23 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
   })
 }
 
-// temp func
-async function processPendingBlocks(ctx: MnanoContext) {
-  if (!ctx.update.message) {
-    return;
-  }
-  if (!ctx.update.message.from) {
-    return;
-  }
-  if (ctx.update.message.from.is_bot) {
-    return;
-  }
+function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
+  TipService.subscribeToConfirmations(async (tgUserId) => {
+    const balance = await TipService.getBalance(tgUserId);
+    const balanceFormatted = convert(balance.toString(), {
+      from: Unit.raw,
+      to: Unit.NANO,
+    });
 
-  const from = ctx.update.message.from;
-  const fromId = `${from.id}`;
-
-  const results = await TipService.processReceiveForUser(fromId);
-  ctx.reply(JSON.stringify(results, undefined, 2));
+    bot.api.sendMessage(
+      tgUserId,
+      `Received top-up to balance! New balance: ${balanceFormatted} NANO`
+    );
+  });
 }
 
 export const BotService = {
   handleMessage,
   getBalance,
-  processPendingBlocks,
+  sendMessageOnTopUp,
 };
