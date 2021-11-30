@@ -25,6 +25,8 @@ bot.command("start", (ctx, next) => {
   next();
 });
 bot.command("balance", wrapNext(BotService.getBalance));
+// temp func
+bot.command("processPendingBlocks", wrapNext(BotService.processPendingBlocks));
 
 bot.on("message", wrapNext(BotService.handleMessage));
 

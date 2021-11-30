@@ -84,7 +84,27 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
   })
 }
 
+// temp func
+async function processPendingBlocks(ctx: MnanoContext) {
+  if (!ctx.update.message) {
+    return;
+  }
+  if (!ctx.update.message.from) {
+    return;
+  }
+  if (ctx.update.message.from.is_bot) {
+    return;
+  }
+
+  const from = ctx.update.message.from;
+  const fromId = `${from.id}`;
+
+  const results = await TipService.processReceiveForUser(fromId);
+  ctx.reply(JSON.stringify(results, undefined, 2));
+}
+
 export const BotService = {
   handleMessage,
   getBalance,
+  processPendingBlocks,
 };

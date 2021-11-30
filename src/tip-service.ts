@@ -68,8 +68,16 @@ async function getOrCreateAccount(tgUserId: string): Promise<Account> {
   return account;
 }
 
+// temp func
+async function processReceiveForUser(tgUserId: string) {
+  const account = await getOrCreateAccount(tgUserId);
+  const secretKey = Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, account.seedIndex);
+  return await Nano.processPendingBlocks(secretKey);
+}
+
 export const TipService = {
   tipUser,
   getBalance,
   getLinkForTopUp,
+  processReceiveForUser,
 };

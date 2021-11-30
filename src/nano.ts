@@ -37,7 +37,7 @@ async function receive(
   let representative = "";
   if (previous) {
     const { blocks } = await client.blocks_info([previous], { json_block: true });
-    representative = (blocks[0].contents as BlocksInfoResponseContents).representative;
+    representative = (blocks[previous].contents as BlocksInfoResponseContents).representative;
   }
   if (!representative) {
     representative = await getMostRecentOnlineRepresentative();
@@ -52,7 +52,7 @@ async function receive(
   };
 
   const block = createBlock(secretKey, receiveBlockData);
-  const workResult = await workGenerate(block.block.previous ?? publicKey);
+  const workResult = await workGenerate(previous ?? publicKey);
   block.block.work = workResult.work;
   const sendResult = await processBlock(block.block, block.block.previous ? 'receive' : 'open');
 
@@ -111,14 +111,17 @@ function getBlockExplorerUrl(hash: string): string {
   return `https://nanocrawler.cc/explorer/block/${hash}`;
 }
 
-/* async function processPendingBlocks(secretKey: string) {
-  const address = deriveAddress(derivePublicKey(secretKey), { useNanoPrefix: true });
+async function processPendingBlocks(secretKey: string) {
+  const { address } = extractAccountMetadata(secretKey);
   const pendingResult = await client.accounts_pending([address], 10, { source: true });
   const blocksMap = (pendingResult.blocks[address] ?? {}) as { [key: string]: { amount: string; source: string; } };
-  return await Promise.all(
-    Object.keys(blocksMap).map(hash => receive(secretKey, hash, BigInt(blocksMap[hash].amount))),
-  );
-} */
+  const results = [];
+  for (const hash of Object.keys(blocksMap)) {
+    const result = await receive(secretKey, hash, BigInt(blocksMap[hash].amount));
+    results.push(result);
+  }
+  return results;
+}
 
 async function workGenerate(hash: string) {
   const response = await client._send('work_generate', {
@@ -148,7 +151,7 @@ async function processBlock(block: BlockRepresentation, subtype: 'send' | 'recei
 
 async function getMostRecentOnlineRepresentative(): Promise<string> {
   const result = await client.representatives_online();
-  const representatives = Object.keys(result.representatives);
+  const representatives = result.representatives as string[];
   if (representatives.length === 0) {
     throw new Error("No online representatives found.");
   }
@@ -163,4 +166,5 @@ export const Nano = {
   getSecretKeyFromSeed,
   getBlockExplorerUrl,
   generateSeed,
+  processPendingBlocks,
 };
