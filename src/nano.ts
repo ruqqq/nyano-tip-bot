@@ -12,6 +12,8 @@ import {
   deriveSecretKey,
   generateSeed,
 } from "nanocurrency";
+import ReconnectingWebSocket from "reconnecting-websocket";
+import WS from "ws";
 
 const client = new NanoClient({
   url: process.env.NANO_NODE_URL,
@@ -158,6 +160,47 @@ async function getMostRecentOnlineRepresentative(): Promise<string> {
   return representatives[0];
 }
 
+function subscribeToConfirmations(cb: (receivingAddress: string, block: BlockRepresentation) => Promise<void>) {
+  if (!process.env.NANO_NODE_WS_URL) {
+    throw new Error("NANO_NODE_WS_URL env not specified!");
+  }
+
+  const ws = new ReconnectingWebSocket(process.env.NANO_NODE_WS_URL, [], {
+    WebSocket: WS,
+    connectionTimeout: 1000,
+    maxRetries: 100000,
+    maxReconnectionDelay: 2000,
+    minReconnectionDelay: 10 // if not set, initial connection will take a few seconds by default
+  });
+
+  ws.addEventListener("open", () => {
+    const confirmation_subscription = {
+      "action": "subscribe",
+      "topic": "confirmation",
+      "ack": true,
+    };
+    ws.send(JSON.stringify(confirmation_subscription));
+  });
+
+  ws.addEventListener("error", (error) => {
+    if (error.message.indexOf("TIMEOUT") === -1) {
+      console.warn(error.error);
+    }
+  });
+
+  ws.addEventListener("message", (msg) => {
+    const data_json = JSON.parse(msg.data);
+
+    if (data_json.topic === "confirmation" && data_json.message.block.subtype === "send") {
+      const receivingAddress = data_json.message.block.link_as_account;
+      cb(receivingAddress, data_json.message.block);
+    }
+  });
+
+  return ws;
+}
+
+
 export const Nano = {
   getBalance,
   receive,
@@ -167,4 +210,5 @@ export const Nano = {
   getBlockExplorerUrl,
   generateSeed,
   processPendingBlocks,
+  subscribeToConfirmations,
 };

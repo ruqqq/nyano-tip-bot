@@ -87,7 +87,7 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
 }
 
 function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
-  TipService.subscribeToConfirmations(async (tgUserId) => {
+  TipService.subscribeToOnReceiveBalance(async (tgUserId) => {
     const balance = await TipService.getBalance(tgUserId);
     const balanceFormatted = convert(balance.toString(), {
       from: Unit.raw,
