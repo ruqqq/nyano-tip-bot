@@ -190,6 +190,14 @@ describe("BotService", () => {
   describe("getBalance", () => {
     it("should reply with balance and topup button", async () => {
       const user1 = createTgUser();
+      when(TipService.getAccount)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue({
+          seedIndex: 1001,
+          address: "nanoAddress",
+          tgUserId: `${user1.id}`,
+          withdrawalAddress: null,
+        });
       when(TipService.getBalance)
         .calledWith(`${user1.id}`)
         .mockResolvedValue(100000000000000n);
@@ -207,7 +215,7 @@ describe("BotService", () => {
       );
       await BotService.getBalance(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith("Balance: 0.0000000000000001 NANO", {
+      expect(ctx.reply).toHaveBeenCalledWith("Balance: 0.0000000000000001 NANO\n\nAddress: nanoAddress", {
         reply_markup: { inline_keyboard: [[{ text: "Top-up", url: "http://google.com" }]] },
       });
     });

@@ -33,6 +33,18 @@ describe("TipService", () => {
 
   afterEach(resetAllWhenMocks);
 
+  describe("get user account", () => {
+    it("should return account", async () => {
+      when(Accounts.getAccountByTgUserId)
+        .calledWith(account1.tgUserId)
+        .mockResolvedValue(account1);
+
+      const account = await TipService.getAccount(account1.tgUserId);
+
+      expect(account).toEqual(account1);
+    });
+  });
+
   describe("get user account balance", () => {
     it("should return account current balance", async () => {
       when(Accounts.getAccountByTgUserId)

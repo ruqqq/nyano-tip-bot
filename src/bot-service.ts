@@ -65,6 +65,7 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
 
   const from = ctx.update.message.from;
   const fromId = `${from.id}`;
+  const account = await TipService.getAccount(fromId);
   const balance = await TipService.getBalance(fromId);
   const balanceFormatted = convert(balance.toString(), {
     from: Unit.raw,
@@ -72,7 +73,7 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
   });
   const url = await TipService.getLinkForTopUp(fromId);
 
-  ctx.reply(`Balance: ${balanceFormatted} NANO`, {
+  ctx.reply(`Balance: ${balanceFormatted} NANO\n\nAddress: ${account.address}`, {
     reply_markup: {
       inline_keyboard: [
         [{

@@ -39,6 +39,10 @@ async function tipUser(
   return Nano.getBlockExplorerUrl(block.hash);
 }
 
+async function getAccount(tgUserId: string) {
+  return await getOrCreateAccount(tgUserId);
+}
+
 async function getBalance(tgUserId: string): Promise<bigint> {
   const account = await getOrCreateAccount(tgUserId);
   return await Nano.getBalance(account.address);
@@ -77,6 +81,7 @@ async function processReceiveForUser(tgUserId: string) {
 
 export const TipService = {
   tipUser,
+  getAccount,
   getBalance,
   getLinkForTopUp,
   processReceiveForUser,
