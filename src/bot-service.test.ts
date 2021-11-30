@@ -186,6 +186,61 @@ describe("BotService", () => {
       expect(ctx.reply).toHaveBeenCalledWith("Insufficient balance. Please top-up and try again.", { reply_to_message_id: message.message_id });
     });
   });
+
+  describe("getBalance", () => {
+    it("should reply with balance and topup button", async () => {
+      const user1 = createTgUser();
+      when(TipService.getBalance)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue(100000000000000n);
+      when(TipService.getLinkForTopUp)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue("http://google.com");
+      const ctx = createContext(
+        createTgUpdate({
+          message: createTgMessage({
+            from: user1,
+            text: "/balance",
+            chat: createTgPrivateChat(),
+          }),
+        })
+      );
+      await BotService.getBalance(ctx);
+
+      expect(ctx.reply).toHaveBeenCalledWith("Balance: 0.0000000000000001 NANO", {
+        reply_markup: { inline_keyboard: [[{ text: "Top-up", url: "http://google.com" }]] },
+      });
+    });
+
+    it("should not reply when sender is a bot", async () => {
+      const ctx = createContext(
+        createTgUpdate({
+          message: createTgMessage({
+            text: "/balance",
+            from: createTgUser({ is_bot: true }),
+            chat: createTgPrivateChat(),
+          }),
+        })
+      );
+      await BotService.getBalance(ctx);
+
+      expect(ctx.reply).not.toHaveBeenCalled();
+    });
+
+    it("should not reply when not in private chat", async () => {
+      const ctx = createContext(
+        createTgUpdate({
+          message: createTgMessage({
+            text: "/balance",
+            chat: createTgGroupChat(),
+          }),
+        })
+      );
+      await BotService.getBalance(ctx);
+
+      expect(ctx.reply).not.toHaveBeenCalled();
+    });
+  });
 });
 
 function createContext(update: Update): MnanoContext {
@@ -224,6 +279,17 @@ function createTgGroupChat(
     id: new Date().getTime(),
     type: "group",
     title: "chat title",
+    ...overrides,
+  };
+}
+
+function createTgPrivateChat(
+  overrides?: Partial<Chat.PrivateChat>
+): Chat.PrivateChat {
+  return {
+    id: new Date().getTime(),
+    type: "private",
+    first_name: "Some name",
     ...overrides,
   };
 }

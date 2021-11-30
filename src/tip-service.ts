@@ -46,7 +46,7 @@ async function getBalance(tgUserId: string): Promise<bigint> {
 
 async function getLinkForTopUp(tgUserId: string): Promise<string> {
   const account = await getOrCreateAccount(tgUserId);
-  return `nano:${account.address}?amount=10000000000000000000000000000`;
+  return `https://paynano.me/${account.address}?amount=0.001`;
 }
 
 async function getOrCreateAccount(tgUserId: string): Promise<Account> {

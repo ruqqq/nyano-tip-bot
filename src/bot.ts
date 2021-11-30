@@ -24,6 +24,7 @@ bot.command("start", (ctx, next) => {
   ctx.reply(`Placeholder. Payload: ${payload}`);
   next();
 });
+bot.command("balance", wrapNext(BotService.getBalance));
 
 bot.on("message", wrapNext(BotService.handleMessage));
 

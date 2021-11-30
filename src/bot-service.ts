@@ -52,6 +52,39 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
   }
 }
 
+async function getBalance(ctx: MnanoContext): Promise<void> {
+  if (!ctx.update.message) {
+    return;
+  }
+  if (!ctx.update.message.from) {
+    return;
+  }
+  if (ctx.update.message.from.is_bot) {
+    return;
+  }
+
+  const from = ctx.update.message.from;
+  const fromId = `${from.id}`;
+  const balance = await TipService.getBalance(fromId);
+  const balanceFormatted = convert(balance.toString(), {
+    from: Unit.raw,
+    to: Unit.NANO,
+  });
+  const url = await TipService.getLinkForTopUp(fromId);
+
+  ctx.reply(`Balance: ${balanceFormatted} NANO`, {
+    reply_markup: {
+      inline_keyboard: [
+        [{
+          text: "Top-up",
+          url,
+        }],
+      ],
+    },
+  })
+}
+
 export const BotService = {
   handleMessage,
+  getBalance,
 };
