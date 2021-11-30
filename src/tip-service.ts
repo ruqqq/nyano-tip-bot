@@ -72,18 +72,26 @@ async function getOrCreateAccount(tgUserId: string): Promise<Account> {
   return account;
 }
 
-function subscribeToOnReceiveBalance(cb: (tgUserId: string) => Promise<void>) {
-  Nano.subscribeToConfirmations(async (receivingAddress, block) => {
+function subscribeToOnReceiveBalance(cb: {
+  onTopUp: (tgUserId: string) => Promise<void>;
+  onTip: (fromTgUserId: string, toTgUserId: string) => Promise<void>;
+}) {
+  Nano.subscribeToConfirmations(async (block) => {
     try {
-      const account = await Accounts.getAccountByAddress(receivingAddress)
-      if (account) {
-        console.log('Confirmed', block);
+      const sendingAccount = await Accounts.getAccountByAddress(block.account);
+      const receivingAccount = await Accounts.getAccountByAddress(block.link_as_account);
+      if (receivingAccount) {
+        console.log("Confirmed", block);
         const { secretKey } = Nano.extractAccountMetadata(
-          Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, account.seedIndex),
+          Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, receivingAccount.seedIndex)
         );
-        const results = await Nano.processPendingBlocks(secretKey)
+        const results = await Nano.processPendingBlocks(secretKey);
         console.log("Received:", results);
-        cb(account.tgUserId);
+        if (sendingAccount) {
+          cb.onTip(sendingAccount.tgUserId, receivingAccount.tgUserId);
+        } else {
+          cb.onTopUp(receivingAccount.tgUserId);
+        }
       }
     } catch (e) {
       console.error(e);

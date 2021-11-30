@@ -10,7 +10,7 @@ jest.mock("./nano");
 describe("TipService", () => {
   const account1: Account = {
     tgUserId: "userId1",
-    address: "nanoAddress",
+    address: "nanoAddress1",
     seedIndex: 1,
     withdrawalAddress: null,
   };
@@ -21,7 +21,7 @@ describe("TipService", () => {
   };
   const account2: Account = {
     tgUserId: "userId2",
-    address: "nanoAddress",
+    address: "nanoAddress2",
     seedIndex: 2,
     withdrawalAddress: null,
   };
@@ -68,7 +68,7 @@ describe("TipService", () => {
 
       const url = await TipService.getLinkForTopUp(account1.tgUserId);
 
-      expect(url).toEqual("https://paynano.me/nanoAddress?amount=0.001");
+      expect(url).toEqual("https://paynano.me/nanoAddress1?amount=0.001");
     });
   });
 
@@ -193,20 +193,18 @@ describe("TipService", () => {
   });
 
   describe("listen on confirmed send blocks and generate receive blocks", () => {
-    it("should generate receive blocks", async () => {
+    it("should generate receive blocks and emit onTopUp", async () => {
       const cb = jest.fn();
       const block = {
         type: "state",
-        account:
-          "nano_34dx4n37jkbxpihuhgytqq64a1i164t8okyzf1ez9afton185njksbqctidb",
+        account: account2.address,
         previous:
           "7DA32EAEFA29A67F45BBCA61F75A6EF7F78155C49A39DA26AD57CE4AE57A2079",
         representative:
           "nano_1n747n7fgebsk93khx6fkrj9wmjkgho6zsmb1m7men39uz4pafmmimhob7y7",
         balance: "11984000000000000000000000000",
         link: "52F120D524A5B9870C894E1624813C551B89B5D3BBC2092360E615569D2B8E91",
-        link_as_account:
-          "nano_1nqj65ckbbfsiw8akmip6k1mroauj8tx9gy436jp3sioctgkq5njtm4m3g1x",
+        link_as_account: account1.address,
         signature:
           "707A4F6E54BACD9628948DAE9526591438CF54685642DF0594585865E43887F3D874055991E5E75D8F56B90E1ABD2F890A3FAE2A7B88C7DB3D9A14EFFF62920C",
         work: "08c3cf84614bc310",
@@ -215,17 +213,58 @@ describe("TipService", () => {
       when(Accounts.getAccountByAddress)
         .calledWith(block.link_as_account)
         .mockResolvedValue(account1);
+      when(Accounts.getAccountByAddress)
+        .calledWith(block.account)
+        .mockResolvedValue(null);
       when(Nano.getSecretKeyFromSeed)
         .calledWith(expect.anything(), account1.seedIndex)
         .mockReturnValue(account1KeyMetadata.secretKey);
       when(Nano.extractAccountMetadata)
         .calledWith(account1KeyMetadata.secretKey)
         .mockReturnValue(account1KeyMetadata);
-      TipService.subscribeToOnReceiveBalance(cb);
+      TipService.subscribeToOnReceiveBalance({ onTip: cb, onTopUp: cb });
 
-      await (Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](block.link_as_account, block);
+      await (Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](block);
 
       expect(cb).toHaveBeenCalledWith(account1.tgUserId);
+      expect(cb).not.toHaveBeenCalledWith(account2.tgUserId, account1.tgUserId);
+    });
+
+    it("should generate receive blocks onTip", async () => {
+      const cb = jest.fn();
+      const block = {
+        type: "state",
+        account: account2.address,
+        previous:
+          "7DA32EAEFA29A67F45BBCA61F75A6EF7F78155C49A39DA26AD57CE4AE57A2079",
+        representative:
+          "nano_1n747n7fgebsk93khx6fkrj9wmjkgho6zsmb1m7men39uz4pafmmimhob7y7",
+        balance: "11984000000000000000000000000",
+        link: "52F120D524A5B9870C894E1624813C551B89B5D3BBC2092360E615569D2B8E91",
+        link_as_account: account1.address,
+        signature:
+          "707A4F6E54BACD9628948DAE9526591438CF54685642DF0594585865E43887F3D874055991E5E75D8F56B90E1ABD2F890A3FAE2A7B88C7DB3D9A14EFFF62920C",
+        work: "08c3cf84614bc310",
+        subtype: "send",
+      };
+      when(Accounts.getAccountByAddress)
+        .calledWith(block.link_as_account)
+        .mockResolvedValue(account1);
+      when(Accounts.getAccountByAddress)
+        .calledWith(block.account)
+        .mockResolvedValue(account2);
+      when(Nano.getSecretKeyFromSeed)
+        .calledWith(expect.anything(), account1.seedIndex)
+        .mockReturnValue(account1KeyMetadata.secretKey);
+      when(Nano.extractAccountMetadata)
+        .calledWith(account1KeyMetadata.secretKey)
+        .mockReturnValue(account1KeyMetadata);
+      TipService.subscribeToOnReceiveBalance({ onTip: cb, onTopUp: cb });
+
+      await (Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](block);
+
+      expect(cb).toHaveBeenCalledWith(account2.tgUserId, account1.tgUserId);
+      expect(cb).not.toHaveBeenCalledWith(account1.tgUserId);
     });
 
     it("should do nothing when receiving address is not in account records", async () => {
@@ -250,9 +289,9 @@ describe("TipService", () => {
       when(Accounts.getAccountByAddress)
         .calledWith(block.link_as_account)
         .mockResolvedValue(null);
-      TipService.subscribeToOnReceiveBalance(cb);
+      TipService.subscribeToOnReceiveBalance({ onTip: cb, onTopUp: cb });
 
-      await (Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](block.link_as_account, block);
+      await (Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](block);
 
       expect(cb).not.toHaveBeenCalled();
     });

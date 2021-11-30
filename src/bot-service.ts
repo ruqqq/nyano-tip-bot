@@ -87,17 +87,31 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
 }
 
 function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
-  TipService.subscribeToOnReceiveBalance(async (tgUserId) => {
-    const balance = await TipService.getBalance(tgUserId);
-    const balanceFormatted = convert(balance.toString(), {
-      from: Unit.raw,
-      to: Unit.NANO,
-    });
+  TipService.subscribeToOnReceiveBalance({
+    onTip: async (fromTgUserId, toTgUserId) => {
+      const balance = await TipService.getBalance(toTgUserId);
+      const balanceFormatted = convert(balance.toString(), {
+        from: Unit.raw,
+        to: Unit.NANO,
+      });
 
-    bot.api.sendMessage(
-      tgUserId,
-      `Received top-up to balance! New balance: ${balanceFormatted} NANO`
-    );
+      bot.api.sendMessage(
+        toTgUserId,
+        `Received tip! New balance: ${balanceFormatted} NANO`
+      );
+    },
+    onTopUp: async (tgUserId) => {
+      const balance = await TipService.getBalance(tgUserId);
+      const balanceFormatted = convert(balance.toString(), {
+        from: Unit.raw,
+        to: Unit.NANO,
+      });
+
+      bot.api.sendMessage(
+        tgUserId,
+        `Received top-up to balance! New balance: ${balanceFormatted} NANO`
+      );
+    }
   });
 }
 

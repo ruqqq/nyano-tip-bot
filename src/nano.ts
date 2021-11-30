@@ -1,5 +1,6 @@
 
 import { BlocksInfoResponseContents, NanoClient } from '@dev-ptera/nano-node-rpc';
+import AwaitLock from 'await-lock';
 import {
   derivePublicKey,
   CommonBlockData,
@@ -113,16 +114,27 @@ function getBlockExplorerUrl(hash: string): string {
   return `https://nanocrawler.cc/explorer/block/${hash}`;
 }
 
+const processPendingBlocksLocks: Record<string, AwaitLock> = {};
+
 async function processPendingBlocks(secretKey: string) {
   const { address } = extractAccountMetadata(secretKey);
-  const pendingResult = await client.accounts_pending([address], 10, { source: true });
-  const blocksMap = (pendingResult.blocks[address] ?? {}) as { [key: string]: { amount: string; source: string; } };
-  const results = [];
-  for (const hash of Object.keys(blocksMap)) {
-    const result = await receive(secretKey, hash, BigInt(blocksMap[hash].amount));
-    results.push(result);
+  if (!processPendingBlocksLocks[address]) {
+    processPendingBlocksLocks[address] = new AwaitLock();
   }
-  return results;
+  await processPendingBlocksLocks[address].acquireAsync();
+
+  try {
+    const pendingResult = await client.accounts_pending([address], 10, { source: true });
+    const blocksMap = (pendingResult.blocks[address] ?? {}) as { [key: string]: { amount: string; source: string; } };
+    const results = [];
+    for (const hash of Object.keys(blocksMap)) {
+      const result = await receive(secretKey, hash, BigInt(blocksMap[hash].amount));
+      results.push(result);
+    }
+    return results;
+  } finally {
+    processPendingBlocksLocks[address].release();
+  }
 }
 
 async function workGenerate(hash: string) {
@@ -160,7 +172,7 @@ async function getMostRecentOnlineRepresentative(): Promise<string> {
   return representatives[0];
 }
 
-function subscribeToConfirmations(cb: (receivingAddress: string, block: BlockRepresentation) => Promise<void>) {
+function subscribeToConfirmations(cb: (block: BlockRepresentation) => Promise<void>) {
   if (!process.env.NANO_NODE_WS_URL) {
     throw new Error("NANO_NODE_WS_URL env not specified!");
   }
@@ -192,8 +204,7 @@ function subscribeToConfirmations(cb: (receivingAddress: string, block: BlockRep
     const data_json = JSON.parse(msg.data);
 
     if (data_json.topic === "confirmation" && data_json.message.block.subtype === "send") {
-      const receivingAddress = data_json.message.block.link_as_account;
-      cb(receivingAddress, data_json.message.block);
+      cb(data_json.message.block);
     }
   });
 
