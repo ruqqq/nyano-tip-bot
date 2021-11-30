@@ -189,7 +189,6 @@ function subscribeToConfirmations(cb: (block: BlockRepresentation) => Promise<vo
     const confirmation_subscription = {
       "action": "subscribe",
       "topic": "confirmation",
-      "ack": true,
     };
     ws.send(JSON.stringify(confirmation_subscription));
     console.log("Listening to confirmations...")
