@@ -64,6 +64,11 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
     return;
   }
 
+  if (ctx.update.message.chat.type !== "private") {
+    ctx.reply(`DM me (@${ctx.me.username}) privately to check your balance.`)
+    return;
+  }
+
   const from = ctx.update.message.from;
   const fromId = `${from.id}`;
   const account = await TipService.getAccount(fromId);

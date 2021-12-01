@@ -236,17 +236,19 @@ describe("BotService", () => {
     });
 
     it("should not reply when not in private chat", async () => {
+      const user1 = createTgUser();
       const ctx = createContext(
         createTgUpdate({
           message: createTgMessage({
             text: "/balance",
+            from: user1,
             chat: createTgGroupChat(),
           }),
         })
       );
       await BotService.getBalance(ctx);
 
-      expect(ctx.reply).not.toHaveBeenCalled();
+      expect(ctx.reply).toHaveBeenCalledWith("DM me (@bot_username) privately to check your balance.");
     });
   });
 });
