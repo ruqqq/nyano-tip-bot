@@ -222,9 +222,15 @@ describe("TipService", () => {
       when(Nano.extractAccountMetadata)
         .calledWith(account1KeyMetadata.secretKey)
         .mockReturnValue(account1KeyMetadata);
+      when(Nano.processPendingBlocks)
+        .calledWith(account1KeyMetadata.secretKey)
+        .mockResolvedValue([]);
       TipService.subscribeToOnReceiveBalance({ onTip: cb, onTopUp: cb });
 
-      await (Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](block);
+      await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
+        "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
+        block
+      );
 
       expect(cb).toHaveBeenCalledWith(account1.tgUserId);
       expect(cb).not.toHaveBeenCalledWith(account2.tgUserId, account1.tgUserId);
@@ -259,9 +265,15 @@ describe("TipService", () => {
       when(Nano.extractAccountMetadata)
         .calledWith(account1KeyMetadata.secretKey)
         .mockReturnValue(account1KeyMetadata);
+      when(Nano.processPendingBlocks)
+        .calledWith(account1KeyMetadata.secretKey)
+        .mockResolvedValue([]);
       TipService.subscribeToOnReceiveBalance({ onTip: cb, onTopUp: cb });
 
-      await (Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](block);
+      await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
+        "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
+        block
+      );
 
       expect(cb).toHaveBeenCalledWith(account2.tgUserId, account1.tgUserId);
       expect(cb).not.toHaveBeenCalledWith(account1.tgUserId);
@@ -291,7 +303,10 @@ describe("TipService", () => {
         .mockResolvedValue(null);
       TipService.subscribeToOnReceiveBalance({ onTip: cb, onTopUp: cb });
 
-      await (Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](block);
+      await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
+        "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
+        block
+      );
 
       expect(cb).not.toHaveBeenCalled();
     });

@@ -128,6 +128,7 @@ async function processPendingBlocks(secretKey: string) {
     const blocksMap = (pendingResult.blocks[address] ?? {}) as { [key: string]: { amount: string; source: string; } };
     const results = [];
     for (const hash of Object.keys(blocksMap)) {
+      console.log(`Creating receive block ${hash} for ${address}`);
       const result = await receive(secretKey, hash, BigInt(blocksMap[hash].amount));
       results.push(result);
     }
@@ -172,7 +173,7 @@ async function getMostRecentOnlineRepresentative(): Promise<string> {
   return representatives[0];
 }
 
-function subscribeToConfirmations(cb: (block: BlockRepresentation) => Promise<void>) {
+function subscribeToConfirmations(cb: (hash: string, block: BlockRepresentation) => Promise<void>) {
   if (!process.env.NANO_NODE_WS_URL) {
     throw new Error("NANO_NODE_WS_URL env not specified!");
   }
@@ -204,7 +205,7 @@ function subscribeToConfirmations(cb: (block: BlockRepresentation) => Promise<vo
     const data_json = JSON.parse(msg.data);
 
     if (data_json.topic === "confirmation" && data_json.message.block.subtype === "send") {
-      cb(data_json.message.block);
+      cb(data_json.message.hash, data_json.message.block);
     }
   });
 

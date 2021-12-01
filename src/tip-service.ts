@@ -76,17 +76,17 @@ function subscribeToOnReceiveBalance(cb: {
   onTopUp: (tgUserId: string) => Promise<void>;
   onTip: (fromTgUserId: string, toTgUserId: string) => Promise<void>;
 }) {
-  Nano.subscribeToConfirmations(async (block) => {
+  Nano.subscribeToConfirmations(async (hash, block) => {
     try {
       const sendingAccount = await Accounts.getAccountByAddress(block.account);
       const receivingAccount = await Accounts.getAccountByAddress(block.link_as_account);
       if (receivingAccount) {
-        console.log("Confirmed", block);
+        console.log("Confirmed", Nano.getBlockExplorerUrl(hash));
         const { secretKey } = Nano.extractAccountMetadata(
           Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, receivingAccount.seedIndex)
         );
         const results = await Nano.processPendingBlocks(secretKey);
-        console.log("Received:", results);
+        results.forEach(result => console.log("Received:", Nano.getBlockExplorerUrl(result.block.hash)))
         if (sendingAccount) {
           cb.onTip(sendingAccount.tgUserId, receivingAccount.tgUserId);
         } else {
