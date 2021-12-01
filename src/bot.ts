@@ -15,14 +15,21 @@ function wrapNext(fn: (ctx: MnanoContext) => Promise<void>): (ctx: MnanoContext,
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const bot = new Bot<MnanoContext>(process.env.BOT_TOKEN!);
 
-bot.command("start", (ctx, next) => {
+bot.command("start", async (ctx, next) => {
   if (!ctx.update.message) {
     next();
     return;
   }
 
   const payload = ctx.update.message?.text.replace("/start", "").trim();
-  ctx.reply(`Placeholder. Payload: ${payload}`);
+
+  if (payload === "topup") {
+    await BotService.getBalance(ctx);
+  } else if (payload === "withdraw") {
+    await BotService.withdrawBalance(ctx);
+  } else {
+    ctx.reply(`Placeholder. Payload: ${payload}`);
+  }
   next();
 });
 bot.command("balance", wrapNext(BotService.getBalance));

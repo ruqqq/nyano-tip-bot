@@ -183,7 +183,22 @@ describe("BotService", () => {
       );
       await BotService.handleMessage(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith("Insufficient balance\\. Please top\\-up and try again\\.", { reply_to_message_id: message.message_id });
+      expect(ctx.reply).toHaveBeenCalledWith(
+        "Insufficient balance\\. Please top\\-up and try again\\.",
+        {
+          reply_to_message_id: message.message_id,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "Top-up",
+                  url: `https://t.me/bot_username?start=topup`,
+                },
+              ],
+            ],
+          },
+        }
+      );
     });
   });
 

@@ -33,6 +33,9 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
       if (e === BusinessErrors.INSUFFICIENT_BALANCE) {
         ctx.reply("Insufficient balance\\. Please top\\-up and try again\\.", {
           reply_to_message_id: ctx.update.message.message_id,
+          reply_markup: {
+            inline_keyboard: [[{ text: "Top-up", url: `https://t.me/${ctx.me.username}?start=topup` }]],
+          },
         });
       } else {
         throw e;
