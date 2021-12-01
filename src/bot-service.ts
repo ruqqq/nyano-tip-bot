@@ -91,6 +91,25 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
   })
 }
 
+async function withdrawBalance(ctx: MnanoContext): Promise<void> {
+  if (!ctx.update.message) {
+    return;
+  }
+  if (!ctx.update.message.from) {
+    return;
+  }
+  if (ctx.update.message.from.is_bot) {
+    return;
+  }
+
+  if (ctx.update.message.chat.type !== "private") {
+    ctx.reply(`DM me (@${ctx.me.username}) privately to withdraw your balance.`)
+    return;
+  }
+
+  ctx.reply("We are still building this feature. Please try again later.");
+}
+
 function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
   TipService.subscribeToOnReceiveBalance({
     onTip: async (fromTgUserId, toTgUserId) => {
@@ -123,5 +142,6 @@ function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
 export const BotService = {
   handleMessage,
   getBalance,
+  withdrawBalance,
   sendMessageOnTopUp,
 };
