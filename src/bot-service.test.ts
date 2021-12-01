@@ -55,7 +55,7 @@ describe("BotService", () => {
       );
       await BotService.handleMessage(ctx);
 
-      expect(ctx.reply).not.toHaveBeenCalled();
+      expect(ctx.reply).toHaveBeenCalledWith("Reply to a message to tip.");
     });
 
     it("should not tip if sender is a bot", async () => {

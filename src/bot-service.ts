@@ -5,8 +5,13 @@ import { BusinessErrors } from "./errors";
 import { TipService } from "./tip-service";
 
 async function handleMessage(ctx: MnanoContext): Promise<void> {
-  const matches = ctx.update?.message?.text?.match(/^!tip ([0-9]+(\.[0-9]+)?){1}/);
-  if (matches && ctx.update.message && ctx.update.message.reply_to_message) {
+  const matches = ctx.update?.message?.text?.match(/^[!/]+tip ([0-9]+(\.[0-9]+)?){1}/);
+
+  if (matches && ctx.update.message) {
+    if (!ctx.update.message.reply_to_message) {
+      ctx.reply("Reply to a message to tip.")
+      return;
+    }
     if (!ctx.update.message.from || !ctx.update.message.reply_to_message.from) {
       return;
     }
