@@ -186,6 +186,7 @@ describe("BotService", () => {
       expect(ctx.reply).toHaveBeenCalledWith(
         "Insufficient balance\\. Please top\\-up and try again\\.",
         {
+          parse_mode: "MarkdownV2",
           reply_to_message_id: message.message_id,
           reply_markup: {
             inline_keyboard: [

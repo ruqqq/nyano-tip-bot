@@ -29,9 +29,22 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
         parse_mode: "MarkdownV2",
         reply_to_message_id: ctx.update.message.message_id,
       });
+
+      if (prevToBalance === 0n) {
+        ctx.reply(
+          `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Click the button below to learn how to withdraw your tip\\.`,
+          {
+            parse_mode: "MarkdownV2",
+            reply_markup: {
+              inline_keyboard: [[{ text: "Withdraw", url: `https://t.me/${ctx.me.username}?start=withdraw` }]],
+            },
+          }
+        );
+      }
     } catch (e) {
       if (e === BusinessErrors.INSUFFICIENT_BALANCE) {
         ctx.reply("Insufficient balance\\. Please top\\-up and try again\\.", {
+          parse_mode: "MarkdownV2",
           reply_to_message_id: ctx.update.message.message_id,
           reply_markup: {
             inline_keyboard: [[{ text: "Top-up", url: `https://t.me/${ctx.me.username}?start=topup` }]],
@@ -40,18 +53,6 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
       } else {
         throw e;
       }
-    }
-
-    if (prevToBalance === 0n) {
-      ctx.reply(
-        `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Click the button below to learn how to withdraw your tip\\.`,
-        {
-          parse_mode: "MarkdownV2",
-          reply_markup: {
-            inline_keyboard: [[{ text: "Withdraw", url: `https://t.me/${ctx.me.username}?start=withdraw` }]],
-          },
-        }
-      );
     }
   }
 }
