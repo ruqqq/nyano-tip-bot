@@ -54,6 +54,11 @@ async function getLinkForTopUp(tgUserId: string): Promise<string> {
   return `https://paynano.me/${account.address}`;
 }
 
+async function getLinkForAccount(tgUserId: string): Promise<string> {
+  const account = await getOrCreateAccount(tgUserId);
+  return Nano.getAccountExplorerUrl(account.address);
+}
+
 async function getOrCreateAccount(tgUserId: string): Promise<Account> {
   let account = await Accounts.getAccountByTgUserId(tgUserId);
   if (!account) {
@@ -105,5 +110,6 @@ export const TipService = {
   getAccount,
   getBalance,
   getLinkForTopUp,
+  getLinkForAccount,
   subscribeToOnReceiveBalance,
 };

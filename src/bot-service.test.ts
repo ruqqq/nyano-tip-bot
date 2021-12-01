@@ -188,7 +188,7 @@ describe("BotService", () => {
   });
 
   describe("getBalance", () => {
-    it("should reply with balance and topup button", async () => {
+    it("should reply with balance and top-up button and account explorer button", async () => {
       const user1 = createTgUser();
       when(TipService.getAccount)
         .calledWith(`${user1.id}`)
@@ -204,6 +204,9 @@ describe("BotService", () => {
       when(TipService.getLinkForTopUp)
         .calledWith(`${user1.id}`)
         .mockResolvedValue("http://google.com");
+      when(TipService.getLinkForAccount)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue("http://google.com");
       const ctx = createContext(
         createTgUpdate({
           message: createTgMessage({
@@ -215,9 +218,17 @@ describe("BotService", () => {
       );
       await BotService.getBalance(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith("Balance: 0.0000000000000001 NANO\n\nAddress: nanoAddress", {
-        reply_markup: { inline_keyboard: [[{ text: "Top-up", url: "http://google.com" }]] },
-      });
+      expect(ctx.reply).toHaveBeenCalledWith(
+        "Balance: 0.0000000000000001 NANO\n\nAddress: nanoAddress",
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "Top-up", url: "http://google.com" }],
+              [{ text: "Account Explorer", url: "http://google.com" }],
+            ],
+          },
+        }
+      );
     });
 
     it("should not reply when sender is a bot", async () => {

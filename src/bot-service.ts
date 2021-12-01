@@ -77,14 +77,19 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
     from: Unit.raw,
     to: Unit.NANO,
   });
-  const url = await TipService.getLinkForTopUp(fromId);
+  const topUpUrl = await TipService.getLinkForTopUp(fromId);
+  const accountExplorerUrl = await TipService.getLinkForAccount(fromId);
 
   ctx.reply(`Balance: ${balanceFormatted} NANO\n\nAddress: ${account.address}`, {
     reply_markup: {
       inline_keyboard: [
         [{
           text: "Top-up",
-          url,
+          url: topUpUrl,
+        }],
+        [{
+          text: "Account Explorer",
+          url: accountExplorerUrl,
         }],
       ],
     },

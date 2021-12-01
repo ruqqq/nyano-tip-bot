@@ -115,6 +115,10 @@ function getBlockExplorerUrl(hash: string): string {
   return `https://nanocrawler.cc/explorer/block/${hash}`;
 }
 
+function getAccountExplorerUrl(address: string): string {
+  return `https://nanocrawler.cc/explorer/account/${address}`;
+}
+
 const processPendingBlocksLocks: Record<string, AwaitLock> = {};
 
 async function processPendingBlocks(secretKey: string) {
@@ -221,6 +225,7 @@ export const Nano = {
   extractAccountMetadata,
   getSecretKeyFromSeed,
   getBlockExplorerUrl,
+  getAccountExplorerUrl,
   generateSeed,
   processPendingBlocks,
   subscribeToConfirmations,

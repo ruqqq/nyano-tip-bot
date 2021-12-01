@@ -72,6 +72,21 @@ describe("TipService", () => {
     });
   });
 
+  describe("get explorer url to account", () => {
+    it("should return a url", async () => {
+      when(Accounts.getAccountByTgUserId)
+        .calledWith(account1.tgUserId)
+        .mockResolvedValue(account1);
+      when(Nano.getAccountExplorerUrl)
+        .calledWith(account1.address)
+        .mockReturnValue("http://google.com")
+
+      const url = await TipService.getLinkForAccount(account1.tgUserId);
+
+      expect(url).toEqual("http://google.com");
+    });
+  });
+
   describe("tip user", () => {
     it("should throw INSUFFICIENT_BALANCE error when tipper has not enough balance", async () => {
       when(Accounts.getAccountByTgUserId)
