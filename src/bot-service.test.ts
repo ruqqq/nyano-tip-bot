@@ -8,6 +8,119 @@ import { TipService } from "./tip-service";
 jest.mock("./tip-service");
 
 describe("BotService", () => {
+  describe("start", () => {
+    it("should not respond when in group", async () => {
+      const user1 = createTgUser();
+      const ctx = createContext(
+        createTgUpdate({
+          message: createTgMessage({
+            from: user1,
+            text: "/start topup",
+            chat: createTgGroupChat(),
+          }),
+        })
+      );
+      await BotService.start(ctx);
+
+      expect(ctx.reply).not.toHaveBeenCalled();
+    });
+
+    it("get balance when payload is topup", async () => {
+      const user1 = createTgUser();
+      when(TipService.getAccount)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue({
+          seedIndex: 1001,
+          address: "nanoAddress",
+          tgUserId: `${user1.id}`,
+          withdrawalAddress: null,
+        });
+      when(TipService.getBalance)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue(100000000000000n);
+      when(TipService.getLinkForTopUp)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue("http://google.com");
+      when(TipService.getLinkForAccount)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue("http://google.com");
+      const ctx = createContext(
+        createTgUpdate({
+          message: createTgMessage({
+            from: user1,
+            text: "/start topup",
+            chat: createTgPrivateChat(),
+          }),
+        })
+      );
+      await BotService.start(ctx);
+
+      expect(ctx.reply).toHaveBeenCalledWith(
+        "Balance: 0.0000000000000001 NANO\n\nAddress: nanoAddress",
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "Top-up", url: "http://google.com" }],
+              [{ text: "Account Explorer", url: "http://google.com" }],
+            ],
+          },
+        }
+      );
+    });
+
+    it("show intro message when no payload", async () => {
+      const user1 = createTgUser();
+      when(TipService.getAccount)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue({
+          seedIndex: 1001,
+          address: "nanoAddress",
+          tgUserId: `${user1.id}`,
+          withdrawalAddress: null,
+        });
+      when(TipService.getBalance)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue(100000000000000n);
+      when(TipService.getLinkForTopUp)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue("http://google.com");
+      when(TipService.getLinkForAccount)
+        .calledWith(`${user1.id}`)
+        .mockResolvedValue("http://google.com");
+      const ctx = createContext(
+        createTgUpdate({
+          message: createTgMessage({
+            from: user1,
+            text: "/start",
+            chat: createTgPrivateChat(),
+          }),
+        })
+      );
+      await BotService.start(ctx);
+
+      expect(ctx.reply).toHaveBeenCalledWith(`Nano is a cryptocurrency \\- it can be used for real life transaction\\. You can check the fiat value of Nano [here](https://www.coingecko.com/en/coins/nano/sgd)\\.
+
+Tip telegram users by replying to their message and send \\"\\/tip \\<value>\\" where \\<value\\> is the amount you wish to tip\\, e\\.g\\. 0\\.001\\.
+
+MnanoBot holds your balance until you withdraw them to your personal wallet\\. You can get your current balance by using the bot command \\/balance\\.
+
+Despite MnanoBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your MnanoBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on-chain and you can view the transaction in the block explorer too\\.
+
+Happy tipping\\!`, { parse_mode: "MarkdownV2" });
+      expect(ctx.reply).toHaveBeenCalledWith(
+        "Balance: 0.0000000000000001 NANO\n\nAddress: nanoAddress",
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "Top-up", url: "http://google.com" }],
+              [{ text: "Account Explorer", url: "http://google.com" }],
+            ],
+          },
+        }
+      );
+    });
+  });
+
   describe("handleMessage", () => {
     it("should not reply to the message when no !tip keyword found", async () => {
       const ctx = createContext(createTgUpdate());
@@ -153,10 +266,10 @@ describe("BotService", () => {
       await BotService.handleMessage(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip\\! Click the button below to learn how to withdraw your tip\\.`, {
+        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip\\! Nano is an actual (crypto)-currency. Click the button below to learn more\\.`, {
         parse_mode: "MarkdownV2",
         reply_markup: {
-          inline_keyboard: [[{ text: "Withdraw", url: "https://t.me/bot_username?start=withdraw" }]],
+          inline_keyboard: [[{ text: "Learn More", url: "https://t.me/bot_username?start" }]],
         },
       });
     });

@@ -4,6 +4,43 @@ import { MnanoContext } from "./context";
 import { BusinessErrors } from "./errors";
 import { TipService } from "./tip-service";
 
+async function start(ctx: MnanoContext) {
+  if (!ctx.update.message) {
+    return;
+  }
+  if (!ctx.update.message.from) {
+    return;
+  }
+  if (ctx.update.message.from.is_bot) {
+    return;
+  }
+  if (ctx.update.message.chat.type !== "private") {
+    return;
+  }
+
+  const payload = ctx.update.message?.text?.replace("/start", "").trim();
+
+  if (payload === "topup") {
+    await BotService.getBalance(ctx);
+  } else if (payload === "withdraw") {
+    await BotService.withdrawBalance(ctx);
+  } else {
+    ctx.reply(
+      `Nano is a cryptocurrency \\- it can be used for real life transaction\\. You can check the fiat value of Nano [here](https://www.coingecko.com/en/coins/nano/sgd)\\.
+
+Tip telegram users by replying to their message and send \\"\\/tip \\<value>\\" where \\<value\\> is the amount you wish to tip\\, e\\.g\\. 0\\.001\\.
+
+MnanoBot holds your balance until you withdraw them to your personal wallet\\. You can get your current balance by using the bot command \\/balance\\.
+
+Despite MnanoBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your MnanoBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on-chain and you can view the transaction in the block explorer too\\.
+
+Happy tipping\\!`,
+      { parse_mode: "MarkdownV2" }
+    );
+    await getBalance(ctx);
+  }
+}
+
 async function handleMessage(ctx: MnanoContext): Promise<void> {
   const matches = ctx.update?.message?.text?.match(/^[!/]+tip ([0-9]+(\.[0-9]+)?){1}/);
 
@@ -37,11 +74,11 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
 
       if (prevToBalance === 0n) {
         ctx.reply(
-          `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Click the button below to learn how to withdraw your tip\\.`,
+          `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Nano is an actual (crypto)-currency. Click the button below to learn more\\.`,
           {
             parse_mode: "MarkdownV2",
             reply_markup: {
-              inline_keyboard: [[{ text: "Withdraw", url: `https://t.me/${ctx.me.username}?start=withdraw` }]],
+              inline_keyboard: [[{ text: "Learn More", url: `https://t.me/${ctx.me.username}?start` }]],
             },
           }
         );
@@ -154,6 +191,7 @@ function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
 }
 
 export const BotService = {
+  start,
   handleMessage,
   getBalance,
   withdrawBalance,
