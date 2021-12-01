@@ -40,7 +40,7 @@ async function tipUser(
   const toKeyMetadata = Nano.extractAccountMetadata(
     Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, toAccount.seedIndex),
   );
-  await Nano.processPendingBlocks(toKeyMetadata.secretKey);
+  Nano.processPendingBlocks(toKeyMetadata.secretKey);
 
   return Nano.getBlockExplorerUrl(block.hash);
 }
