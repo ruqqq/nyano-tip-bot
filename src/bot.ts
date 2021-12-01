@@ -31,10 +31,12 @@ bot.catch((err) => {
   const e = err.error;
   if (e instanceof GrammyError) {
     log.error("Error in request:", e.description);
+    ctx.reply("A technical error occurred while processing your request. Please try again later.")
   } else if (e instanceof HttpError) {
     log.error("Could not contact Telegram:", e);
   } else {
     log.error("Unknown error:", e);
+    ctx.reply("A technical error occurred while processing your request. Please try again later.")
   }
 });
 
