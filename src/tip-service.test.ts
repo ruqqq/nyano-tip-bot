@@ -50,12 +50,19 @@ describe("TipService", () => {
       when(Accounts.getAccountByTgUserId)
         .calledWith(account1.tgUserId)
         .mockResolvedValue(account1);
+      when(Nano.getSecretKeyFromSeed)
+        .calledWith(expect.anything(), account1.seedIndex)
+        .mockReturnValue(account1KeyMetadata.secretKey);
+      when(Nano.extractAccountMetadata)
+        .calledWith(account1KeyMetadata.secretKey)
+        .mockReturnValue(account1KeyMetadata);
       when(Nano.getBalance)
         .calledWith(account1.address)
         .mockResolvedValue(BigInt("100"));
 
       const balance = await TipService.getBalance(account1.tgUserId);
 
+      expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account1KeyMetadata.secretKey);
       expect(balance).toEqual(100n);
     });
   });

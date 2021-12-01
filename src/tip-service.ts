@@ -46,6 +46,10 @@ async function getAccount(tgUserId: string) {
 
 async function getBalance(tgUserId: string): Promise<bigint> {
   const account = await getOrCreateAccount(tgUserId);
+  const { secretKey } = Nano.extractAccountMetadata(
+    Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, account.seedIndex)
+  );
+  Nano.processPendingBlocks(secretKey);
   return await Nano.getBalance(account.address);
 }
 
