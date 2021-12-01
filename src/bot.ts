@@ -25,6 +25,10 @@ bot.command("start", (ctx, next) => {
   next();
 });
 bot.command("balance", wrapNext(BotService.getBalance));
+bot.command("withdraw", (ctx, next) => {
+  ctx.reply("Placeholder. Please try again later.");
+  next();
+});
 
 bot.on("message", wrapNext(BotService.handleMessage));
 
