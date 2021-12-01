@@ -135,6 +135,7 @@ async function processPendingBlocks(secretKey: string) {
     for (const hash of Object.keys(blocksMap)) {
       log.info(`Creating receive block ${hash} for ${address}`);
       const result = await receive(secretKey, hash, BigInt(blocksMap[hash].amount));
+      log.info(`Created receive block ${hash} for ${address}`);
       results.push(result);
     }
     return results;

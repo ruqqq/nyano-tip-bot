@@ -129,6 +129,12 @@ describe("TipService", () => {
       when(Nano.extractAccountMetadata)
         .calledWith(account1KeyMetadata.secretKey)
         .mockReturnValue(account1KeyMetadata);
+      when(Nano.getSecretKeyFromSeed)
+        .calledWith(expect.anything(), account2.seedIndex)
+        .mockReturnValue(account2KeyMetadata.secretKey);
+      when(Nano.extractAccountMetadata)
+        .calledWith(account2KeyMetadata.secretKey)
+        .mockReturnValue(account2KeyMetadata);
       when(Nano.send)
         .calledWith(
           account1KeyMetadata.secretKey,
@@ -147,6 +153,7 @@ describe("TipService", () => {
       );
 
       expect(url).toEqual("http://hash");
+      expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account2KeyMetadata.secretKey);
     });
 
     it("should automatically create account for tipper when it does not exists", async () => {
