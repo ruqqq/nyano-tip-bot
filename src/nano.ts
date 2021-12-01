@@ -15,6 +15,7 @@ import {
 } from "nanocurrency";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import WS from "ws";
+import log from "loglevel";
 
 const client = new NanoClient({
   url: process.env.NANO_NODE_URL,
@@ -128,7 +129,7 @@ async function processPendingBlocks(secretKey: string) {
     const blocksMap = (pendingResult.blocks[address] ?? {}) as { [key: string]: { amount: string; source: string; } };
     const results = [];
     for (const hash of Object.keys(blocksMap)) {
-      console.log(`Creating receive block ${hash} for ${address}`);
+      log.info(`Creating receive block ${hash} for ${address}`);
       const result = await receive(secretKey, hash, BigInt(blocksMap[hash].amount));
       results.push(result);
     }
@@ -192,12 +193,12 @@ function subscribeToConfirmations(cb: (hash: string, block: BlockRepresentation)
       "topic": "confirmation",
     };
     ws.send(JSON.stringify(confirmation_subscription));
-    console.log("Listening to confirmations...")
+    log.info("Listening to confirmations...")
   });
 
   ws.addEventListener("error", (error) => {
     if (error.message.indexOf("TIMEOUT") === -1) {
-      console.warn(error.error);
+      log.warn(error.error);
     }
   });
 

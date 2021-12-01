@@ -1,8 +1,9 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { Bot, NextFunction } from "grammy";
+import { Bot, GrammyError, HttpError, NextFunction } from "grammy";
 import { MnanoContext } from "./context";
 import { BotService } from "./bot-service";
+import log from "loglevel";
 
 function wrapNext(fn: (ctx: MnanoContext) => Promise<void>): (ctx: MnanoContext, next: NextFunction) => Promise<void> {
   return async (ctx, next) => {
@@ -33,5 +34,18 @@ bot.command("withdraw", (ctx, next) => {
 bot.on("message", wrapNext(BotService.handleMessage));
 
 BotService.sendMessageOnTopUp(bot);
+
+bot.catch((err) => {
+  const ctx = err.ctx;
+  log.error(`Error while handling update ${ctx.update.update_id}:`);
+  const e = err.error;
+  if (e instanceof GrammyError) {
+    log.error("Error in request:", e.description);
+  } else if (e instanceof HttpError) {
+    log.error("Could not contact Telegram:", e);
+  } else {
+    log.error("Unknown error:", e);
+  }
+});
 
 bot.start();

@@ -42,6 +42,7 @@
     "dotenv": "^10.0.0",
     "grammy": "^1.4.2",
     "level": "^7.0.1",
+    "loglevel": "^1.8.0",
     "nanocurrency": "^2.5.0",
     "reconnecting-websocket": "^4.4.0",
     "ws": "^8.3.0"

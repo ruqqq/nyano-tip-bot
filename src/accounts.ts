@@ -1,6 +1,7 @@
 import AwaitLock from "await-lock";
 import { NotFoundError } from "level-errors";
 import { db } from "./db";
+import log from "loglevel";
 
 export type Account = {
   tgUserId: string;
@@ -67,7 +68,7 @@ async function saveAccount(account: Account): Promise<void> {
       await db.del(`tg-${account.tgUserId}`);
       await db.del(`address-${account.address}`);
     } catch (e) {
-      console.warn(e);
+      log.warn(e);
     }
     throw e;
   }

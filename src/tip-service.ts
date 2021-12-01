@@ -1,6 +1,7 @@
 import { Account, Accounts } from "./accounts";
 import { BusinessErrors } from "./errors";
 import { Nano } from "./nano";
+import log from "loglevel";
 
 const NANO_WALLET_SEED = process.env.NANO_WALLET_SEED as string;
 if (!NANO_WALLET_SEED) {
@@ -10,7 +11,7 @@ if (!NANO_WALLET_SEED) {
 
 async function generateAndPrintSeed() {
   const seed = await Nano.generateSeed();
-  console.log(`Generated seed: ${seed}`)
+  log.info(`Generated seed: ${seed}`)
 }
 
 async function tipUser(
@@ -81,12 +82,12 @@ function subscribeToOnReceiveBalance(cb: {
       const sendingAccount = await Accounts.getAccountByAddress(block.account);
       const receivingAccount = await Accounts.getAccountByAddress(block.link_as_account);
       if (receivingAccount) {
-        console.log("Confirmed", Nano.getBlockExplorerUrl(hash));
+        log.info("Confirmed", Nano.getBlockExplorerUrl(hash));
         const { secretKey } = Nano.extractAccountMetadata(
           Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, receivingAccount.seedIndex)
         );
         const results = await Nano.processPendingBlocks(secretKey);
-        results.forEach(result => console.log("Received:", Nano.getBlockExplorerUrl(result.block.hash)))
+        results.forEach(result => log.info("Received:", Nano.getBlockExplorerUrl(result.block.hash)))
         if (sendingAccount) {
           cb.onTip(sendingAccount.tgUserId, receivingAccount.tgUserId);
         } else {
@@ -94,7 +95,7 @@ function subscribeToOnReceiveBalance(cb: {
         }
       }
     } catch (e) {
-      console.error(e);
+      log.error(e);
     }
   });
 }
