@@ -242,6 +242,66 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       );
     });
 
+    it("should tip recipient 0.001 nano when '/tip' is sent as a reply to a message", async () => {
+      const user1 = createTgUser();
+      const user2 = createTgUser();
+      const message = createTgMessage({
+        from: user1,
+        text: "/tip",
+        reply_to_message: {
+          ...createTgMessage(),
+          from: user2,
+          reply_to_message: undefined,
+        },
+      });
+      when(TipService.tipUser)
+        .calledWith(`${user1.id}`, `${user2.id}`, 1000000000000000000000000000n)
+        .mockResolvedValue("http://block-url.com");
+
+      const ctx = createContext(
+        createTgUpdate({
+          message,
+        })
+      );
+      await BotService.handleMessage(ctx);
+
+      expect(ctx.reply).toHaveBeenCalledWith(
+        "[0\\.001](http://block-url.com) NANO sent\\!",
+        { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
+      );
+    });
+
+    it("should send additional prompt if it is the first time the recipient receives a tip", async () => {
+      const user1 = createTgUser();
+      const user2 = createTgUser();
+      const message = createTgMessage({
+        from: user1,
+        text: "!tip 0.0001",
+        reply_to_message: {
+          ...createTgMessage(),
+          from: user2,
+          reply_to_message: undefined,
+        },
+      });
+      when(TipService.getBalance)
+        .calledWith(`${user2.id}`)
+        .mockResolvedValue(0n);
+
+      const ctx = createContext(
+        createTgUpdate({
+          message,
+        })
+      );
+      await BotService.handleMessage(ctx);
+
+      expect(ctx.reply).toHaveBeenCalledWith(
+        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip\\! Nano is an actual (crypto)-currency. Click the button below to learn more\\.`, {
+        parse_mode: "MarkdownV2",
+        reply_markup: {
+          inline_keyboard: [[{ text: "Learn More", url: "https://t.me/bot_username?start" }]],
+        },
+      });
+    });
     it("should send additional prompt if it is the first time the recipient receives a tip", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser();

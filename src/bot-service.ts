@@ -42,7 +42,11 @@ Happy tipping\\!`,
 }
 
 async function handleMessage(ctx: MnanoContext): Promise<void> {
-  const matches = ctx.update?.message?.text?.match(/^[!/]+tip ([0-9]+(\.[0-9]+)?){1}/);
+  let text = ctx.update?.message?.text;
+  if (text === "/tip") {
+    text = "/tip 0.001";
+  }
+  const matches = text?.match(/^[!/]+tip ([0-9]+(\.[0-9]+)?){1}/);
 
   if (matches && ctx.update.message) {
     if (!ctx.update.message.reply_to_message) {
