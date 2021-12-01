@@ -74,7 +74,7 @@ async function send(
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const previous = (await getAccountFrontier(address))!;
   const { blocks } = await client.blocks_info([previous], { json_block: true });
-  const representative = (blocks[0].contents as BlocksInfoResponseContents).representative;
+  const representative = (blocks[previous].contents as BlocksInfoResponseContents).representative;
   const balanceResponse = await client.account_balance(address);
   const sendBlockData: CommonBlockData & SendBlockData = {
     work: null,

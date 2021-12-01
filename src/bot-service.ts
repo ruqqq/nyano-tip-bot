@@ -25,13 +25,13 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
 
     try {
       const url = await TipService.tipUser(fromId, toId, amount);
-      ctx.reply(`[${matches[1]}](${url}) NANO sent!`, {
+      ctx.reply(`[${matches[1].replace(/\./, "\\.")}](${url}) NANO sent\\!`, {
         parse_mode: "MarkdownV2",
         reply_to_message_id: ctx.update.message.message_id,
       });
     } catch (e) {
       if (e === BusinessErrors.INSUFFICIENT_BALANCE) {
-        ctx.reply("Insufficient balance. Please top-up and try again.", {
+        ctx.reply("Insufficient balance\\. Please top\\-up and try again\\.", {
           reply_to_message_id: ctx.update.message.message_id,
         });
       } else {
@@ -41,7 +41,7 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
 
     if (prevToBalance === 0n) {
       ctx.reply(
-        `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip! Click the button below to learn how to withdraw your tip.`,
+        `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Click the button below to learn how to withdraw your tip\\.`,
         {
           parse_mode: "MarkdownV2",
           reply_markup: {

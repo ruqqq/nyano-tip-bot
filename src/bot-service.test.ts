@@ -124,7 +124,7 @@ describe("BotService", () => {
       await BotService.handleMessage(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "[0.0001](http://block-url.com) NANO sent!",
+        "[0\\.0001](http://block-url.com) NANO sent\\!",
         { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
       );
     });
@@ -153,7 +153,7 @@ describe("BotService", () => {
       await BotService.handleMessage(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip! Click the button below to learn how to withdraw your tip.`, {
+        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip\\! Click the button below to learn how to withdraw your tip\\.`, {
         parse_mode: "MarkdownV2",
         reply_markup: {
           inline_keyboard: [[{ text: "Withdraw", url: "https://t.me/bot_username?start=withdraw" }]],
@@ -183,7 +183,7 @@ describe("BotService", () => {
       );
       await BotService.handleMessage(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith("Insufficient balance. Please top-up and try again.", { reply_to_message_id: message.message_id });
+      expect(ctx.reply).toHaveBeenCalledWith("Insufficient balance\\. Please top\\-up and try again\\.", { reply_to_message_id: message.message_id });
     });
   });
 
