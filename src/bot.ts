@@ -4,6 +4,7 @@ import { Bot, GrammyError, HttpError, NextFunction } from "grammy";
 import { MnanoContext } from "./context";
 import { BotService } from "./bot-service";
 import log from "loglevel";
+log.setDefaultLevel(process.env.LOG_LEVEL as any ?? "INFO");
 
 function wrapNext(fn: (ctx: MnanoContext) => Promise<void>): (ctx: MnanoContext, next: NextFunction) => Promise<void> {
   return async (ctx, next) => {
