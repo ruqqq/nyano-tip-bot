@@ -35,7 +35,7 @@ bot.command("start", async (ctx, next) => {
 });
 bot.command("balance", wrapNext(BotService.getBalance));
 bot.command("withdraw", wrapNext(BotService.withdrawBalance));
-bot.command("tip", wrapNext(BotService.handleMessage));
+bot.command("tip", (ctx) => BotService.handleMessage(ctx));
 
 bot.on("message", wrapNext(BotService.handleMessage));
 
