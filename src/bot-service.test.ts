@@ -37,7 +37,7 @@ describe("BotService", () => {
         });
       when(TipService.getBalance)
         .calledWith(`${user1.id}`)
-        .mockResolvedValue(100000000000000n);
+        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
       when(TipService.getLinkForTopUp)
         .calledWith(`${user1.id}`)
         .mockResolvedValue("http://google.com");
@@ -56,7 +56,7 @@ describe("BotService", () => {
       await BotService.start(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 0.0000000000000001 NANO\n\nAddress: nanoAddress",
+        "Balance: 0.0000000000000001 NANO\nPending: 0 NANO\n\nAddress: nanoAddress",
         {
           reply_markup: {
             inline_keyboard: [
@@ -80,7 +80,7 @@ describe("BotService", () => {
         });
       when(TipService.getBalance)
         .calledWith(`${user1.id}`)
-        .mockResolvedValue(100000000000000n);
+        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
       when(TipService.getLinkForTopUp)
         .calledWith(`${user1.id}`)
         .mockResolvedValue("http://google.com");
@@ -108,7 +108,7 @@ Despite MnanoBot holding your balance\\, because Nano is a cryptocurrency\\, the
 
 Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 0.0000000000000001 NANO\n\nAddress: nanoAddress",
+        "Balance: 0.0000000000000001 NANO\nPending: 0 NANO\n\nAddress: nanoAddress",
         {
           reply_markup: {
             inline_keyboard: [
@@ -245,6 +245,9 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
           reply_to_message: undefined,
         },
       });
+      when(TipService.getBalance)
+        .calledWith(`${user2.id}`)
+        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
         .mockResolvedValue("http://block-url.com");
@@ -276,6 +279,9 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
           reply_to_message: undefined,
         },
       });
+      when(TipService.getBalance)
+        .calledWith(`${user2.id}`)
+        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 1000000000000000000000000000n)
         .mockResolvedValue("http://block-url.com");
@@ -307,6 +313,9 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
           reply_to_message: undefined,
         },
       });
+      when(TipService.getBalance)
+        .calledWith(`${user2.id}`)
+        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
         .mockResolvedValue("http://block-url.com");
@@ -338,6 +347,9 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
           reply_to_message: undefined,
         },
       });
+      when(TipService.getBalance)
+        .calledWith(`${user2.id}`)
+        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 1000000000000000000000000000n)
         .mockResolvedValue("http://block-url.com");
@@ -371,7 +383,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       });
       when(TipService.getBalance)
         .calledWith(`${user2.id}`)
-        .mockResolvedValue(0n);
+        .mockResolvedValue({ balance: 0n, pending: 0n });
 
       const ctx = createContext(
         createTgUpdate({
@@ -401,6 +413,9 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
           reply_to_message: undefined,
         },
       });
+      when(TipService.getBalance)
+        .calledWith(`${user2.id}`)
+        .mockResolvedValue({ balance: 0n, pending: 0n });
       when(TipService.tipUser)
         .calledWith( `${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
         .mockRejectedValue(BusinessErrors.INSUFFICIENT_BALANCE);
@@ -444,7 +459,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         });
       when(TipService.getBalance)
         .calledWith(`${user1.id}`)
-        .mockResolvedValue(100000000000000n);
+        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
       when(TipService.getLinkForTopUp)
         .calledWith(`${user1.id}`)
         .mockResolvedValue("http://google.com");
@@ -463,7 +478,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       await BotService.getBalance(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 0.0000000000000001 NANO\n\nAddress: nanoAddress",
+        "Balance: 0.0000000000000001 NANO\nPending: 0 NANO\n\nAddress: nanoAddress",
         {
           reply_markup: {
             inline_keyboard: [

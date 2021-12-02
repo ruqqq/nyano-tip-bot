@@ -26,9 +26,12 @@ const client = new NanoClient({
   }
 });
 
-async function getBalance(address: string): Promise<bigint> {
+async function getBalance(address: string): Promise<{balance: bigint, pending: bigint}> {
   const result = await client.account_balance(address);
-  return BigInt(result.balance);
+  return {
+    balance: BigInt(result.balance),
+    pending: BigInt(result.pending),
+  }
 }
 
 async function receive(

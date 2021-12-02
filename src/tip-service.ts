@@ -22,7 +22,7 @@ async function tipUser(
   const fromAccount = await getOrCreateAccount(fromTgUserId);
   const toAccount = await getOrCreateAccount(toTgUserId);
 
-  const fromBalance = await Nano.getBalance(fromAccount.address);
+  const { balance: fromBalance } = await Nano.getBalance(fromAccount.address);
   if (fromBalance - amount < 0n) {
     throw BusinessErrors.INSUFFICIENT_BALANCE;
   }
@@ -49,7 +49,7 @@ async function getAccount(tgUserId: string) {
   return await getOrCreateAccount(tgUserId);
 }
 
-async function getBalance(tgUserId: string): Promise<bigint> {
+async function getBalance(tgUserId: string): Promise<{balance: bigint, pending: bigint}> {
   const account = await getOrCreateAccount(tgUserId);
   const { secretKey } = Nano.extractAccountMetadata(
     Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, account.seedIndex)

@@ -104,7 +104,7 @@ describe("TipService", () => {
         .mockResolvedValue(account2);
       when(Nano.getBalance)
         .calledWith(account1.address)
-        .mockResolvedValue(0n);
+        .mockResolvedValue({ balance: 0n, pending: 0n });
 
       await expect(TipService.tipUser(
         account1.tgUserId,
@@ -122,7 +122,7 @@ describe("TipService", () => {
         .mockResolvedValue(account2);
       when(Nano.getBalance)
         .calledWith(account1.address)
-        .mockResolvedValue(1n);
+        .mockResolvedValue({ balance: 1n, pending: 0n });
       when(Nano.getSecretKeyFromSeed)
         .calledWith(expect.anything(), account1.seedIndex)
         .mockReturnValue(account1KeyMetadata.secretKey);
@@ -174,7 +174,7 @@ describe("TipService", () => {
         .mockResolvedValue(account2);
       when(Nano.getBalance)
         .calledWith(account1.address)
-        .mockResolvedValue(0n);
+        .mockResolvedValue({ balance: 0n, pending: 0n });
 
       await expect(TipService.tipUser(
         account1.tgUserId,
@@ -207,7 +207,7 @@ describe("TipService", () => {
         });
       when(Nano.getBalance)
         .calledWith(account1.address)
-        .mockResolvedValue(0n);
+        .mockResolvedValue({ balance: 0n, pending: 0n });
 
       await expect(TipService.tipUser(
         account1.tgUserId,

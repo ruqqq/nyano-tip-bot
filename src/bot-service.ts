@@ -74,7 +74,7 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
     const to = ctx.update.message.reply_to_message.from;
     const toId = `${to.id}`;
     const amount = BigInt(convert(amountString, { from: Unit.NANO, to: Unit.raw }));
-    const prevToBalance = await TipService.getBalance(toId);
+    const { balance: prevToBalance } = await TipService.getBalance(toId);
 
     try {
       const msg = await ctx.reply(`Sending ${amountString.replace(/\./, "\\.")} NANO to [${to.first_name}](tg://user?id=${to.id})\\!`, {
@@ -139,15 +139,19 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
   const from = ctx.update.message.from;
   const fromId = `${from.id}`;
   const account = await TipService.getAccount(fromId);
-  const balance = await TipService.getBalance(fromId);
+  const { balance, pending } = await TipService.getBalance(fromId);
   const balanceFormatted = convert(balance.toString(), {
+    from: Unit.raw,
+    to: Unit.NANO,
+  });
+  const pendingFormatted = convert(pending.toString(), {
     from: Unit.raw,
     to: Unit.NANO,
   });
   const topUpUrl = await TipService.getLinkForTopUp(fromId);
   const accountExplorerUrl = await TipService.getLinkForAccount(fromId);
 
-  ctx.reply(`Balance: ${balanceFormatted} NANO\n\nAddress: ${account.address}`, {
+  ctx.reply(`Balance: ${balanceFormatted} NANO\nPending: ${pendingFormatted} NANO\n\nAddress: ${account.address}`, {
     reply_markup: {
       inline_keyboard: [
         [{
@@ -185,27 +189,35 @@ async function withdrawBalance(ctx: MnanoContext): Promise<void> {
 function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
   TipService.subscribeToOnReceiveBalance({
     onTip: async (fromTgUserId, toTgUserId) => {
-      const balance = await TipService.getBalance(toTgUserId);
+      const { balance, pending } = await TipService.getBalance(toTgUserId);
       const balanceFormatted = convert(balance.toString(), {
+        from: Unit.raw,
+        to: Unit.NANO,
+      });
+      const pendingFormatted = convert(pending.toString(), {
         from: Unit.raw,
         to: Unit.NANO,
       });
 
       bot.api.sendMessage(
         toTgUserId,
-        `Received tip! New balance: ${balanceFormatted} NANO`
+        `Received tip! New balance: ${balanceFormatted} NANO (Pending: ${pendingFormatted} NANO)`
       );
     },
     onTopUp: async (tgUserId) => {
-      const balance = await TipService.getBalance(tgUserId);
+      const { balance, pending } = await TipService.getBalance(tgUserId);
       const balanceFormatted = convert(balance.toString(), {
+        from: Unit.raw,
+        to: Unit.NANO,
+      });
+      const pendingFormatted = convert(pending.toString(), {
         from: Unit.raw,
         to: Unit.NANO,
       });
 
       bot.api.sendMessage(
         tgUserId,
-        `Received top-up to balance! New balance: ${balanceFormatted} NANO`
+        `Received top-up to balance! New balance: ${balanceFormatted} NANO (Pending: ${pendingFormatted} NANO)`
       );
     }
   });
