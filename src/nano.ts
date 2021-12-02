@@ -175,7 +175,7 @@ async function generateWork(hash: string) {
 
   try {
     const cached = await WorkCache.get(hash);
-    if (hash) {
+    if (cached) {
       return cached;
     }
   } finally {
