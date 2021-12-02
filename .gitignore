@@ -5,3 +5,4 @@ node_modules
 # db dirs
 db/
 test-db/
+work-cache-db/
