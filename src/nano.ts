@@ -16,6 +16,7 @@ import {
 import ReconnectingWebSocket from "reconnecting-websocket";
 import WS from "ws";
 import log from "loglevel";
+import { WorkCache } from './work-cache';
 
 const client = new NanoClient({
   url: process.env.NANO_NODE_URL,
@@ -59,9 +60,11 @@ async function receive(
   };
 
   const block = createBlock(secretKey, receiveBlockData);
-  const workResult = await workGenerate(previous ?? publicKey);
+  const workResult = await generateWork(previous ?? publicKey);
   block.block.work = workResult.work;
   const sendResult = await processBlock(block.block, block.block.previous ? 'receive' : 'open');
+
+  generateAndCacheWork(block.hash);
 
   return {
     block,
@@ -89,14 +92,34 @@ async function send(
   };
 
   const block = createBlock(secretKey, sendBlockData);
-  const workResult = await workGenerate(block.block.previous);
+  const workResult = await generateWork(block.block.previous);
   block.block.work = workResult.work;
   const sendResult = await processBlock(block.block, 'send');
+
+  generateAndCacheWork(block.hash);
 
   return {
     block,
     sendResult,
   };
+}
+
+const workGenLock: AwaitLock = new AwaitLock();
+
+async function generateAndCacheWork(hash: string) {
+  await workGenLock.acquireAsync();
+
+  try {
+    const existingWork = await WorkCache.get(hash);
+    if (!existingWork) {
+      const workResult = await workGenerate(hash);
+      await WorkCache.put(hash, workResult);
+    }
+  } catch (e) {
+    log.warn("generateAndCacheWork failed:", e);
+  } finally {
+    workGenLock.release();
+  }
 }
 
 function extractAccountMetadata(secretKey: string) {
@@ -145,6 +168,21 @@ async function processPendingBlocks(secretKey: string) {
   } finally {
     processPendingBlocksLocks[address].release();
   }
+}
+
+async function generateWork(hash: string) {
+  await workGenLock.acquireAsync();
+
+  try {
+    const cached = await WorkCache.get(hash);
+    if (hash) {
+      return cached;
+    }
+  } finally {
+    workGenLock.release();
+  }
+
+  return await workGenerate(hash);
 }
 
 async function workGenerate(hash: string) {
