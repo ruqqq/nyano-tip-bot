@@ -83,7 +83,7 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
 
       if (prevToBalance === 0n) {
         ctx.reply(
-          `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Nano is an actual (crypto)-currency. Click the button below to learn more\\.`,
+          `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Nano is an actual cryptocurrency. Click the button below to learn more\\.`,
           {
             parse_mode: "MarkdownV2",
             reply_markup: {

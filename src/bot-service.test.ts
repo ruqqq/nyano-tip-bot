@@ -315,38 +315,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       await BotService.handleMessage(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip\\! Nano is an actual (crypto)-currency. Click the button below to learn more\\.`, {
-        parse_mode: "MarkdownV2",
-        reply_markup: {
-          inline_keyboard: [[{ text: "Learn More", url: "https://t.me/bot_username?start" }]],
-        },
-      });
-    });
-    it("should send additional prompt if it is the first time the recipient receives a tip", async () => {
-      const user1 = createTgUser();
-      const user2 = createTgUser();
-      const message = createTgMessage({
-        from: user1,
-        text: "!tip 0.0001",
-        reply_to_message: {
-          ...createTgMessage(),
-          from: user2,
-          reply_to_message: undefined,
-        },
-      });
-      when(TipService.getBalance)
-        .calledWith(`${user2.id}`)
-        .mockResolvedValue(0n);
-
-      const ctx = createContext(
-        createTgUpdate({
-          message,
-        })
-      );
-      await BotService.handleMessage(ctx);
-
-      expect(ctx.reply).toHaveBeenCalledWith(
-        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip\\! Nano is an actual (crypto)-currency. Click the button below to learn more\\.`, {
+        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip\\! Nano is an actual cryptocurrency. Click the button below to learn more\\.`, {
         parse_mode: "MarkdownV2",
         reply_markup: {
           inline_keyboard: [[{ text: "Learn More", url: "https://t.me/bot_username?start" }]],
@@ -486,7 +455,7 @@ function createContext(update: Update): MnanoContext {
 
 function createTgUpdate(overrides?: Partial<Update>): Update {
   return {
-    update_id: new Date().getTime() + Math.floor(Math.random() * 100),
+    update_id: new Date().getTime() + Math.floor(Math.random() * 10000),
     message: createTgMessage(),
     ...overrides,
   };
@@ -495,7 +464,7 @@ function createTgUpdate(overrides?: Partial<Update>): Update {
 function createTgMessage(overrides?: Partial<Message>): Message {
   return {
     text: "some message",
-    message_id: new Date().getTime() + Math.floor(Math.random() * 100),
+    message_id: new Date().getTime() + Math.floor(Math.random() * 10000),
     date: new Date().getTime(),
     chat: createTgGroupChat(),
     ...overrides,
@@ -506,7 +475,7 @@ function createTgGroupChat(
   overrides?: Partial<Chat.GroupChat>
 ): Chat.GroupChat {
   return {
-    id: new Date().getTime() + Math.floor(Math.random() * 100),
+    id: new Date().getTime() + Math.floor(Math.random() * 10000),
     type: "group",
     title: "chat title",
     ...overrides,
@@ -517,7 +486,7 @@ function createTgPrivateChat(
   overrides?: Partial<Chat.PrivateChat>
 ): Chat.PrivateChat {
   return {
-    id: new Date().getTime() + Math.floor(Math.random() * 100),
+    id: new Date().getTime() + Math.floor(Math.random() * 10000),
     type: "private",
     first_name: "Some name",
     ...overrides,
@@ -525,7 +494,7 @@ function createTgPrivateChat(
 }
 
 function createTgUser(overrides?: Partial<User>): User {
-  const id = new Date().getTime() + (Math.floor(Math.random() * 100));
+  const id = new Date().getTime() + (Math.floor(Math.random() * 10000));
   return {
     id,
     is_bot: false,
