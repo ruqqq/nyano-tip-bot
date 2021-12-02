@@ -131,7 +131,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
     });
 
     describe("should not tip when !tip keyword is found but invalid format", () => {
-      it.each(["!tip", "!tip abcde", "hey !tip abcde", "hey !tip"])(
+      it.each(["hey !tipabcde", "hey!tip"])(
         "%s",
         async (text) => {
           const user1 = createTgUser();
@@ -268,6 +268,64 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       const message = createTgMessage({
         from: user1,
         text: "/tip",
+        reply_to_message: {
+          ...createTgMessage(),
+          from: user2,
+          reply_to_message: undefined,
+        },
+      });
+      when(TipService.tipUser)
+        .calledWith(`${user1.id}`, `${user2.id}`, 1000000000000000000000000000n)
+        .mockResolvedValue("http://block-url.com");
+
+      const ctx = createContext(
+        createTgUpdate({
+          message,
+        })
+      );
+      await BotService.handleMessage(ctx);
+
+      expect(ctx.reply).toHaveBeenCalledWith(
+        `[0\\.001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+        { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
+      );
+    });
+
+    it("should tip recipient 0.0001 nano when 'thanks! !tip 0.0001' is sent as a reply to a message", async () => {
+      const user1 = createTgUser();
+      const user2 = createTgUser();
+      const message = createTgMessage({
+        from: user1,
+        text: "thanks! !tip 0.0001",
+        reply_to_message: {
+          ...createTgMessage(),
+          from: user2,
+          reply_to_message: undefined,
+        },
+      });
+      when(TipService.tipUser)
+        .calledWith(`${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
+        .mockResolvedValue("http://block-url.com");
+
+      const ctx = createContext(
+        createTgUpdate({
+          message,
+        })
+      );
+      await BotService.handleMessage(ctx);
+
+      expect(ctx.reply).toHaveBeenCalledWith(
+        `[0\\.0001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+        { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
+      );
+    });
+
+    it("should tip recipient 0.001 nano when 'thanks for the help!! !tip' is sent as a reply to a message", async () => {
+      const user1 = createTgUser();
+      const user2 = createTgUser();
+      const message = createTgMessage({
+        from: user1,
+        text: "thanks for the help!! !tip",
         reply_to_message: {
           ...createTgMessage(),
           from: user2,

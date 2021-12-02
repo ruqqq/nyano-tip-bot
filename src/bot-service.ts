@@ -42,11 +42,13 @@ Happy tipping\\!`,
 }
 
 async function handleMessage(ctx: MnanoContext): Promise<void> {
-  let text = ctx.update?.message?.text;
-  if (text === "/tip") {
-    text = "/tip 0.001";
-  }
-  const matches = text?.match(/^[!/]+tip ([0-9]+(\.[0-9]+)?){1}/);
+  const text = " " + ctx.update?.message?.text + " ";
+  const matchesOnStart = text?.match(/^ \/tip(\s[0-9]+(\.[0-9]+)?)? $/);
+  const matchesInBetween = text?.match(/ !tip(\s[0-9]+(\.[0-9]+)?)? /);
+  const matches = matchesOnStart || matchesInBetween;
+  const amountString =
+    (((matchesOnStart && matchesOnStart[1]) ||
+    (matchesInBetween && matchesInBetween[1])) ?? "0.001").trim();
 
   if (matches && ctx.update.message) {
     if (!ctx.update.message.reply_to_message) {
@@ -71,12 +73,12 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
     const fromId = `${from.id}`;
     const to = ctx.update.message.reply_to_message.from;
     const toId = `${to.id}`;
-    const amount = BigInt(convert(matches[1], { from: Unit.NANO, to: Unit.raw }));
+    const amount = BigInt(convert(amountString, { from: Unit.NANO, to: Unit.raw }));
     const prevToBalance = await TipService.getBalance(toId);
 
     try {
       const url = await TipService.tipUser(fromId, toId, amount);
-      ctx.reply(`[${matches[1].replace(/\./, "\\.")}](${url}) NANO sent to [${to.first_name}](tg://user?id=${to.id})\\!`, {
+      ctx.reply(`[${amountString.replace(/\./, "\\.")}](${url}) NANO sent to [${to.first_name}](tg://user?id=${to.id})\\!`, {
         parse_mode: "MarkdownV2",
         reply_to_message_id: ctx.update.message.message_id,
       });
