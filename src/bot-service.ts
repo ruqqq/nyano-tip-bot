@@ -76,7 +76,7 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
 
     try {
       const url = await TipService.tipUser(fromId, toId, amount);
-      ctx.reply(`[${matches[1].replace(/\./, "\\.")}](${url}) NANO sent\\!`, {
+      ctx.reply(`[${matches[1].replace(/\./, "\\.")}](${url}) NANO sent to [${to.first_name}](tg://user?id=${to.id})\\!`, {
         parse_mode: "MarkdownV2",
         reply_to_message_id: ctx.update.message.message_id,
       });

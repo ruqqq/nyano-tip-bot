@@ -257,7 +257,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       await BotService.handleMessage(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "[0\\.0001](http://block-url.com) NANO sent\\!",
+        `[0\\.0001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
         { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
       );
     });
@@ -286,7 +286,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       await BotService.handleMessage(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "[0\\.001](http://block-url.com) NANO sent\\!",
+        `[0\\.001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
         { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
       );
     });
@@ -486,7 +486,7 @@ function createContext(update: Update): MnanoContext {
 
 function createTgUpdate(overrides?: Partial<Update>): Update {
   return {
-    update_id: new Date().getTime(),
+    update_id: new Date().getTime() + Math.floor(Math.random() * 100),
     message: createTgMessage(),
     ...overrides,
   };
@@ -495,7 +495,7 @@ function createTgUpdate(overrides?: Partial<Update>): Update {
 function createTgMessage(overrides?: Partial<Message>): Message {
   return {
     text: "some message",
-    message_id: new Date().getTime() + (Math.random() * 100),
+    message_id: new Date().getTime() + Math.floor(Math.random() * 100),
     date: new Date().getTime(),
     chat: createTgGroupChat(),
     ...overrides,
@@ -506,7 +506,7 @@ function createTgGroupChat(
   overrides?: Partial<Chat.GroupChat>
 ): Chat.GroupChat {
   return {
-    id: new Date().getTime() + (Math.random() * 100),
+    id: new Date().getTime() + Math.floor(Math.random() * 100),
     type: "group",
     title: "chat title",
     ...overrides,
@@ -517,7 +517,7 @@ function createTgPrivateChat(
   overrides?: Partial<Chat.PrivateChat>
 ): Chat.PrivateChat {
   return {
-    id: new Date().getTime() + (Math.random() * 100),
+    id: new Date().getTime() + Math.floor(Math.random() * 100),
     type: "private",
     first_name: "Some name",
     ...overrides,
@@ -525,7 +525,7 @@ function createTgPrivateChat(
 }
 
 function createTgUser(overrides?: Partial<User>): User {
-  const id = new Date().getTime() + (Math.random() * 100);
+  const id = new Date().getTime() + (Math.floor(Math.random() * 100));
   return {
     id,
     is_bot: false,
