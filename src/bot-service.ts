@@ -77,14 +77,24 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
     const prevToBalance = await TipService.getBalance(toId);
 
     try {
-      const url = await TipService.tipUser(fromId, toId, amount);
-      ctx.reply(`[${amountString.replace(/\./, "\\.")}](${url}) NANO sent to [${to.first_name}](tg://user?id=${to.id})\\!`, {
+      const msg = await ctx.reply(`Sending ${amountString.replace(/\./, "\\.")} NANO to [${to.first_name}](tg://user?id=${to.id})\\!`, {
         parse_mode: "MarkdownV2",
         reply_to_message_id: ctx.update.message.message_id,
       });
+      const url = await TipService.tipUser(fromId, toId, amount);
+      await ctx.api.editMessageText(
+        msg.chat.id,
+        msg.message_id,
+        `[${amountString.replace(/\./, "\\.")}](${url}) NANO sent to [${
+          to.first_name
+        }](tg://user?id=${to.id})\\!`,
+        {
+          parse_mode: "MarkdownV2",
+        }
+      );
 
       if (prevToBalance === 0n) {
-        ctx.reply(
+        await ctx.reply(
           `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Nano is an actual cryptocurrency. Click the button below to learn more\\.`,
           {
             parse_mode: "MarkdownV2",

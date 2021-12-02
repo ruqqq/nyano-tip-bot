@@ -256,9 +256,11 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       );
       await BotService.handleMessage(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith(
+      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
         `[0\\.0001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
+        { parse_mode: "MarkdownV2" }
       );
     });
 
@@ -285,9 +287,11 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       );
       await BotService.handleMessage(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith(
+      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
         `[0\\.001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
+        { parse_mode: "MarkdownV2" }
       );
     });
 
@@ -314,9 +318,11 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       );
       await BotService.handleMessage(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith(
+      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
         `[0\\.0001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
+        { parse_mode: "MarkdownV2" }
       );
     });
 
@@ -343,9 +349,11 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       );
       await BotService.handleMessage(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith(
+      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
         `[0\\.001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        { parse_mode: "MarkdownV2", reply_to_message_id: message.message_id }
+        { parse_mode: "MarkdownV2" }
       );
     });
 
@@ -503,7 +511,10 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
 function createContext(update: Update): MnanoContext {
   return {
     update,
-    reply: jest.fn(),
+    reply: jest.fn(() => createTgMessage()),
+    api: {
+      editMessageText: jest.fn(),
+    },
     me: {
       id: -1,
       username: "bot_username",
