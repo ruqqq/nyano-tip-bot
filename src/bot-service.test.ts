@@ -192,6 +192,26 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.reply).not.toHaveBeenCalled();
     });
 
+    it("should not tip if sender is the recipient", async () => {
+      const user1 = createTgUser();
+      const ctx = createContext(
+        createTgUpdate({
+          message: createTgMessage({
+            from: user1,
+            text: "!tip 0.0001",
+            reply_to_message: {
+              ...createTgMessage(),
+              from: user1,
+              reply_to_message: undefined,
+            },
+          }),
+        })
+      );
+      await BotService.handleMessage(ctx);
+
+      expect(ctx.reply).toHaveBeenCalledWith("Try tipping other people instead.");
+    });
+
     it("should not tip if recipient is a bot", async () => {
       const user1 = createTgUser();
       const botUser = createTgUser({ is_bot: true });
@@ -475,7 +495,7 @@ function createTgUpdate(overrides?: Partial<Update>): Update {
 function createTgMessage(overrides?: Partial<Message>): Message {
   return {
     text: "some message",
-    message_id: new Date().getTime(),
+    message_id: new Date().getTime() + (Math.random() * 100),
     date: new Date().getTime(),
     chat: createTgGroupChat(),
     ...overrides,
@@ -486,7 +506,7 @@ function createTgGroupChat(
   overrides?: Partial<Chat.GroupChat>
 ): Chat.GroupChat {
   return {
-    id: new Date().getTime(),
+    id: new Date().getTime() + (Math.random() * 100),
     type: "group",
     title: "chat title",
     ...overrides,
@@ -497,7 +517,7 @@ function createTgPrivateChat(
   overrides?: Partial<Chat.PrivateChat>
 ): Chat.PrivateChat {
   return {
-    id: new Date().getTime(),
+    id: new Date().getTime() + (Math.random() * 100),
     type: "private",
     first_name: "Some name",
     ...overrides,
@@ -505,7 +525,7 @@ function createTgPrivateChat(
 }
 
 function createTgUser(overrides?: Partial<User>): User {
-  const id = new Date().getTime();
+  const id = new Date().getTime() + (Math.random() * 100);
   return {
     id,
     is_bot: false,
