@@ -27,13 +27,13 @@ async function start(ctx: MnanoContext) {
     await BotService.withdrawBalance(ctx);
   } else {
     ctx.reply(
-      `Nano is a cryptocurrency \\- it can be used for real life transaction\\. You can check the fiat value of Nano [here](https://www.coingecko.com/en/coins/nano/sgd)\\.
+      `Nano is a cryptocurrency \\- it can be used for real life transactions\\. You can check the fiat value of Nano [here](https://www.coingecko.com/en/coins/nano/sgd)\\. Nyano is just a smaller unit representation of Nano\\.
 
 Tip telegram users by replying to their message and send \\"\\/tip \\<value\\>\\" where \\<value\\> is the amount you wish to tip\\, e\\.g\\. 0\\.001\\.
 
-MnanoBot holds your balance until you withdraw them to your personal wallet\\. You can get your current balance by using the bot command \\/balance\\.
+NyanoTipBot holds your balance until you withdraw them to your personal wallet\\. You can get your current balance by using the bot command \\/balance\\.
 
-Despite MnanoBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your MnanoBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
+Despite NyanoTipBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your MnanoBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
 
 Happy tipping\\!`,
       { parse_mode: "MarkdownV2" }
@@ -49,7 +49,7 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
   const matches = matchesOnStart || matchesInBetween;
   const amountString =
     (((matchesOnStart && matchesOnStart[1]) ||
-    (matchesInBetween && matchesInBetween[1])) ?? "0.001").trim();
+    (matchesInBetween && matchesInBetween[1])) ?? "10").trim();
 
   if (matches && ctx.update.message) {
     if (!ctx.update.message.reply_to_message) {
@@ -74,11 +74,11 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
     const fromId = `${from.id}`;
     const to = ctx.update.message.reply_to_message.from;
     const toId = `${to.id}`;
-    const amount = BigInt(convert(amountString, { from: Unit.NANO, to: Unit.raw }));
+    const amount = BigInt(convert(amountString, { from: Unit.nano, to: Unit.raw }));
     const { balance: prevToBalance } = await TipService.getBalance(toId);
 
     try {
-      const msg = await ctx.reply(`Sending ${amountString.replace(/\./, "\\.")} NANO to [${to.first_name}](tg://user?id=${to.id})\\!`, {
+      const msg = await ctx.reply(`Sending ${amountString.replace(/\./, "\\.")} nyano to [${to.first_name}](tg://user?id=${to.id})\\!`, {
         parse_mode: "MarkdownV2",
         reply_to_message_id: ctx.update.message.message_id,
       });
@@ -86,7 +86,7 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
       await ctx.api.editMessageText(
         msg.chat.id,
         msg.message_id,
-        `[${amountString.replace(/\./, "\\.")}](${url}) NANO sent to [${
+        `[${amountString.replace(/\./, "\\.")}](${url}) nyano sent to [${
           to.first_name
         }](tg://user?id=${to.id})\\!`,
         {
@@ -143,16 +143,16 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
   const { balance, pending } = await TipService.getBalance(fromId);
   const balanceFormatted = convert(balance.toString(), {
     from: Unit.raw,
-    to: Unit.NANO,
+    to: Unit.nano,
   });
   const pendingFormatted = convert(pending.toString(), {
     from: Unit.raw,
-    to: Unit.NANO,
+    to: Unit.nano,
   });
   const topUpUrl = await TipService.getLinkForTopUp(fromId);
   const accountExplorerUrl = await TipService.getLinkForAccount(fromId);
 
-  ctx.reply(`Balance: ${balanceFormatted} NANO\nPending: ${pendingFormatted} NANO\n\nAddress: ${account.address}`, {
+  ctx.reply(`Balance: ${balanceFormatted} nyano\nPending: ${pendingFormatted} nyano\n\nAddress: ${account.address}`, {
     reply_markup: {
       inline_keyboard: [
         [{
@@ -193,17 +193,17 @@ function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
       const { balance, pending } = await TipService.getBalance(toTgUserId);
       const balanceFormatted = convert(balance.toString(), {
         from: Unit.raw,
-        to: Unit.NANO,
+        to: Unit.nano,
       });
       const pendingFormatted = convert(pending.toString(), {
         from: Unit.raw,
-        to: Unit.NANO,
+        to: Unit.nano,
       });
 
       try {
         bot.api.sendMessage(
           toTgUserId,
-          `Received tip! New balance: ${balanceFormatted} NANO (Pending: ${pendingFormatted} NANO)`
+          `Received tip! New balance: ${balanceFormatted} nyano (Pending: ${pendingFormatted} nyano)`
         );
       } catch (e) {
         log.warn(e);
@@ -213,17 +213,17 @@ function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
       const { balance, pending } = await TipService.getBalance(tgUserId);
       const balanceFormatted = convert(balance.toString(), {
         from: Unit.raw,
-        to: Unit.NANO,
+        to: Unit.nano,
       });
       const pendingFormatted = convert(pending.toString(), {
         from: Unit.raw,
-        to: Unit.NANO,
+        to: Unit.nano,
       });
 
       try {
         bot.api.sendMessage(
           tgUserId,
-          `Received top-up to balance! New balance: ${balanceFormatted} NANO (Pending: ${pendingFormatted} NANO)`
+          `Received top-up to balance! New balance: ${balanceFormatted} nyano (Pending: ${pendingFormatted} nyano)`
         );
       } catch (e) {
         log.warn(e);

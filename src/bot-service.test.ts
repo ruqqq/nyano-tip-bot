@@ -37,7 +37,7 @@ describe("BotService", () => {
         });
       when(TipService.getBalance)
         .calledWith(`${user1.id}`)
-        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
+        .mockResolvedValue({ balance: 10000000000000000000000000n, pending: 0n });
       when(TipService.getLinkForTopUp)
         .calledWith(`${user1.id}`)
         .mockResolvedValue("http://google.com");
@@ -56,7 +56,7 @@ describe("BotService", () => {
       await BotService.start(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 0.0000000000000001 NANO\nPending: 0 NANO\n\nAddress: nanoAddress",
+        "Balance: 10 nyano\nPending: 0 nyano\n\nAddress: nanoAddress",
         {
           reply_markup: {
             inline_keyboard: [
@@ -80,7 +80,7 @@ describe("BotService", () => {
         });
       when(TipService.getBalance)
         .calledWith(`${user1.id}`)
-        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
+        .mockResolvedValue({ balance: 10000000000000000000000000n, pending: 0n });
       when(TipService.getLinkForTopUp)
         .calledWith(`${user1.id}`)
         .mockResolvedValue("http://google.com");
@@ -98,17 +98,17 @@ describe("BotService", () => {
       );
       await BotService.start(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith(`Nano is a cryptocurrency \\- it can be used for real life transaction\\. You can check the fiat value of Nano [here](https://www.coingecko.com/en/coins/nano/sgd)\\.
+      expect(ctx.reply).toHaveBeenCalledWith(`Nano is a cryptocurrency \\- it can be used for real life transactions\\. You can check the fiat value of Nano [here](https://www.coingecko.com/en/coins/nano/sgd)\\. Nyano is just a smaller unit representation of Nano\\.
 
 Tip telegram users by replying to their message and send \\"\\/tip \\<value\\>\\" where \\<value\\> is the amount you wish to tip\\, e\\.g\\. 0\\.001\\.
 
-MnanoBot holds your balance until you withdraw them to your personal wallet\\. You can get your current balance by using the bot command \\/balance\\.
+NyanoTipBot holds your balance until you withdraw them to your personal wallet\\. You can get your current balance by using the bot command \\/balance\\.
 
-Despite MnanoBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your MnanoBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
+Despite NyanoTipBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your MnanoBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
 
 Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 0.0000000000000001 NANO\nPending: 0 NANO\n\nAddress: nanoAddress",
+        "Balance: 10 nyano\nPending: 0 nyano\n\nAddress: nanoAddress",
         {
           reply_markup: {
             inline_keyboard: [
@@ -162,7 +162,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         createTgUpdate({
           message: createTgMessage({
             from: user1,
-            text: "!tip 0.0001",
+            text: "!tip 10",
           }),
         })
       );
@@ -178,7 +178,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         createTgUpdate({
           message: createTgMessage({
             from: botUser,
-            text: "!tip 0.0001",
+            text: "!tip 10",
             reply_to_message: {
               ...createTgMessage(),
               from: user1,
@@ -198,7 +198,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         createTgUpdate({
           message: createTgMessage({
             from: user1,
-            text: "!tip 0.0001",
+            text: "!tip 10",
             reply_to_message: {
               ...createTgMessage(),
               from: user1,
@@ -219,7 +219,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         createTgUpdate({
           message: createTgMessage({
             from: user1,
-            text: "!tip 0.0001",
+            text: "!tip 10",
             reply_to_message: {
               ...createTgMessage(),
               from: botUser,
@@ -233,12 +233,12 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.reply).not.toHaveBeenCalled();
     });
 
-    it("should tip recipient 0.0001 nano when '!tip 0.0001' is sent as a reply to a message", async () => {
+    it("should tip recipient 100 nyano when '!tip 100' is sent as a reply to a message", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser();
       const message = createTgMessage({
         from: user1,
-        text: "!tip 0.0001",
+        text: "!tip 100",
         reply_to_message: {
           ...createTgMessage(),
           from: user2,
@@ -247,7 +247,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       });
       when(TipService.getBalance)
         .calledWith(`${user2.id}`)
-        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
+        .mockResolvedValue({ balance: 100000000000000000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
         .mockResolvedValue("http://block-url.com");
@@ -262,12 +262,12 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        `[0\\.0001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+        `[100](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
         { parse_mode: "MarkdownV2" }
       );
     });
 
-    it("should tip recipient 0.001 nano when '/tip' is sent as a reply to a message", async () => {
+    it("should tip recipient 10 nyano when '/tip' is sent as a reply to a message", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser();
       const message = createTgMessage({
@@ -281,9 +281,9 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       });
       when(TipService.getBalance)
         .calledWith(`${user2.id}`)
-        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
+        .mockResolvedValue({ balance: 10000000000000000000000000n, pending: 0n });
       when(TipService.tipUser)
-        .calledWith(`${user1.id}`, `${user2.id}`, 1000000000000000000000000000n)
+        .calledWith(`${user1.id}`, `${user2.id}`, 10000000000000000000000000n)
         .mockResolvedValue("http://block-url.com");
 
       const ctx = createContext(
@@ -296,17 +296,17 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        `[0\\.001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+        `[10](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
         { parse_mode: "MarkdownV2" }
       );
     });
 
-    it("should tip recipient 0.0001 nano when 'thanks! !tip 0.0001' is sent as a reply to a message", async () => {
+    it("should tip recipient 10.5 nyano when 'thanks! !tip 10.5' is sent as a reply to a message", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser();
       const message = createTgMessage({
         from: user1,
-        text: "thanks! !tip 0.0001",
+        text: "thanks! !tip 10.5",
         reply_to_message: {
           ...createTgMessage(),
           from: user2,
@@ -315,9 +315,9 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       });
       when(TipService.getBalance)
         .calledWith(`${user2.id}`)
-        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
+        .mockResolvedValue({ balance: 10500000000000000000000000n, pending: 0n });
       when(TipService.tipUser)
-        .calledWith(`${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
+        .calledWith(`${user1.id}`, `${user2.id}`, 10500000000000000000000000n)
         .mockResolvedValue("http://block-url.com");
 
       const ctx = createContext(
@@ -330,12 +330,12 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        `[0\\.0001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+        `[10\\.5](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
         { parse_mode: "MarkdownV2" }
       );
     });
 
-    it("should tip recipient 0.001 nano when 'thanks for the help!! !tip' is sent as a reply to a message", async () => {
+    it("should tip recipient 10 nyano when 'thanks for the help!! !tip' is sent as a reply to a message", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser();
       const message = createTgMessage({
@@ -349,9 +349,9 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       });
       when(TipService.getBalance)
         .calledWith(`${user2.id}`)
-        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
+        .mockResolvedValue({ balance: 10000000000000000000000000n, pending: 0n });
       when(TipService.tipUser)
-        .calledWith(`${user1.id}`, `${user2.id}`, 1000000000000000000000000000n)
+        .calledWith(`${user1.id}`, `${user2.id}`, 10000000000000000000000000n)
         .mockResolvedValue("http://block-url.com");
 
       const ctx = createContext(
@@ -364,7 +364,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        `[0\\.001](http://block-url.com) NANO sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+        `[10](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
         { parse_mode: "MarkdownV2" }
       );
     });
@@ -374,7 +374,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       const user2 = createTgUser();
       const message = createTgMessage({
         from: user1,
-        text: "!tip 0.0001",
+        text: "!tip 10",
         reply_to_message: {
           ...createTgMessage(),
           from: user2,
@@ -406,7 +406,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       const user2 = createTgUser();
       const message = createTgMessage({
         from: user1,
-        text: "!tip 0.0001",
+        text: "!tip 10",
         reply_to_message: {
           ...createTgMessage(),
           from: user2,
@@ -417,7 +417,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         .calledWith(`${user2.id}`)
         .mockResolvedValue({ balance: 0n, pending: 0n });
       when(TipService.tipUser)
-        .calledWith( `${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
+        .calledWith( `${user1.id}`, `${user2.id}`, 10000000000000000000000000n)
         .mockRejectedValue(BusinessErrors.INSUFFICIENT_BALANCE);
       const ctx = createContext(
         createTgUpdate({
@@ -459,7 +459,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         });
       when(TipService.getBalance)
         .calledWith(`${user1.id}`)
-        .mockResolvedValue({ balance: 100000000000000n, pending: 0n });
+        .mockResolvedValue({ balance: 10000000000000000000000000n, pending: 0n });
       when(TipService.getLinkForTopUp)
         .calledWith(`${user1.id}`)
         .mockResolvedValue("http://google.com");
@@ -478,7 +478,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       await BotService.getBalance(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 0.0000000000000001 NANO\nPending: 0 NANO\n\nAddress: nanoAddress",
+        "Balance: 10 nyano\nPending: 0 nyano\n\nAddress: nanoAddress",
         {
           reply_markup: {
             inline_keyboard: [
