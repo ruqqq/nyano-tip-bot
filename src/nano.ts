@@ -114,6 +114,7 @@ async function generateAndCacheWork(hash: string) {
     if (!existingWork) {
       const workResult = await workGenerate(hash);
       await WorkCache.put(hash, workResult);
+      log.info("Cached work for:", hash, workResult);
     }
   } catch (e) {
     log.warn("generateAndCacheWork failed:", e);
@@ -186,6 +187,7 @@ async function generateWork(hash: string) {
 }
 
 async function workGenerate(hash: string) {
+  log.info("work_generate:", hash);
   const response = await client._send('work_generate', {
     json_block: 'true',
     hash,
