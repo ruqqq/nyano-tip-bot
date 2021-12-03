@@ -21,6 +21,8 @@ async function start(ctx: MnanoContext) {
 
   const payload = ctx.update.message?.text?.replace("/start", "").trim();
 
+  log.info(`${ctx.update.message.from} requested /start ${payload}`);
+
   if (payload === "topup") {
     await BotService.getBalance(ctx);
   } else if (payload === "withdraw") {
@@ -136,6 +138,8 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
     ctx.reply(`DM me (@${ctx.me.username}) privately to check your balance.`)
     return;
   }
+
+  log.info(`${ctx.update.message.from} requested /balance`);
 
   const from = ctx.update.message.from;
   const fromId = `${from.id}`;
