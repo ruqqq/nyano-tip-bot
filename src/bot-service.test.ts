@@ -393,7 +393,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       await BotService.handleMessage(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip\\! Nano is an actual cryptocurrency. Click the button below to learn more\\.`, {
+        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip\\! Nano is an actual cryptocurrency\\. Click the button below to learn more\\.`, {
         parse_mode: "MarkdownV2",
         reply_markup: {
           inline_keyboard: [[{ text: "Learn More", url: "https://t.me/bot_username?start" }]],
