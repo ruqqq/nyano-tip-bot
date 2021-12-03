@@ -1,11 +1,21 @@
 import { workCacheDb } from "./db";
 import { NotFoundError } from "level-errors";
 
-async function put(hash: string, value: string): Promise<void> {
+async function put(
+  hash: string,
+  value: { hash: string; work: string; difficulty: string; multiplier: string }
+): Promise<void> {
   await workCacheDb.put(hash, value);
 }
 
-async function get(hash: string): Promise<string | null> {
+async function get(
+  hash: string
+): Promise<{
+  hash: string;
+  work: string;
+  difficulty: string;
+  multiplier: string;
+} | null> {
   try {
     return await workCacheDb.get(hash);
   } catch (e) {

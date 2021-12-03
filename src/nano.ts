@@ -186,7 +186,12 @@ async function generateWork(hash: string) {
   return await workGenerate(hash);
 }
 
-async function workGenerate(hash: string) {
+async function workGenerate(hash: string): Promise<{
+  hash: string;
+  work: string;
+  difficulty: string;
+  multiplier: string;
+}> {
   log.info("work_generate:", hash);
   const response = await client._send('work_generate', {
     json_block: 'true',

@@ -58,12 +58,12 @@ describe("TipService", () => {
         .mockReturnValue(account1KeyMetadata);
       when(Nano.getBalance)
         .calledWith(account1.address)
-        .mockResolvedValue(BigInt("100"));
+        .mockResolvedValue({ balance: 100n, pending: 0n });
 
       const balance = await TipService.getBalance(account1.tgUserId);
 
       expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account1KeyMetadata.secretKey);
-      expect(balance).toEqual(100n);
+      expect(balance).toEqual({ balance: 100n, pending: 0n });
     });
   });
 
