@@ -145,14 +145,22 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
     from: Unit.raw,
     to: Unit.nano,
   });
+  const balanceFormattedNano = convert(balance.toString(), {
+    from: Unit.raw,
+    to: Unit.NANO,
+  });
   const pendingFormatted = convert(pending.toString(), {
     from: Unit.raw,
     to: Unit.nano,
   });
+  const pendingFormattedNano = convert(pending.toString(), {
+    from: Unit.raw,
+    to: Unit.NANO,
+  });
   const topUpUrl = await TipService.getLinkForTopUp(fromId);
   const accountExplorerUrl = await TipService.getLinkForAccount(fromId);
 
-  ctx.reply(`Balance: ${balanceFormatted} nyano\nPending: ${pendingFormatted} nyano\n\nAddress: ${account.address}`, {
+  ctx.reply(`Balance: ${balanceFormatted} nyano (${balanceFormattedNano} NANO)\nPending: ${pendingFormatted} nyano (${pendingFormattedNano} NANO)\n\nAddress: ${account.address}`, {
     reply_markup: {
       inline_keyboard: [
         [{

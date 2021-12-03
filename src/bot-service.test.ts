@@ -56,7 +56,7 @@ describe("BotService", () => {
       await BotService.start(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 10 nyano\nPending: 0 nyano\n\nAddress: nanoAddress",
+        "Balance: 10 nyano (0.00001 NANO)\nPending: 0 nyano (0 NANO)\n\nAddress: nanoAddress",
         {
           reply_markup: {
             inline_keyboard: [
@@ -108,7 +108,7 @@ Despite NyanoTipBot holding your balance\\, because Nano is a cryptocurrency\\, 
 
 Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 10 nyano\nPending: 0 nyano\n\nAddress: nanoAddress",
+        "Balance: 10 nyano (0.00001 NANO)\nPending: 0 nyano (0 NANO)\n\nAddress: nanoAddress",
         {
           reply_markup: {
             inline_keyboard: [
@@ -478,7 +478,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       await BotService.getBalance(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 10 nyano\nPending: 0 nyano\n\nAddress: nanoAddress",
+        "Balance: 10 nyano (0.00001 NANO)\nPending: 0 nyano (0 NANO)\n\nAddress: nanoAddress",
         {
           reply_markup: {
             inline_keyboard: [
