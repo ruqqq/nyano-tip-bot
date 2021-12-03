@@ -21,7 +21,7 @@ async function start(ctx: MnanoContext) {
 
   const payload = ctx.update.message?.text?.replace("/start", "").trim();
 
-  log.info(`${ctx.update.message.from} requested /start ${payload}`);
+  log.info(`${ctx.update.message.from.id} requested /start ${payload}`);
 
   if (payload === "topup") {
     await BotService.getBalance(ctx);
@@ -78,6 +78,8 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
     const toId = `${to.id}`;
     const amount = BigInt(convert(amountString, { from: Unit.nano, to: Unit.raw }));
     const { balance: prevToBalance } = await TipService.getBalance(toId);
+
+    log.info(`${fromId} sending tip to ${toId}`);
 
     try {
       const msg = await ctx.reply(`Sending ${amountString.replace(/\./, "\\.")} nyano to [${to.first_name}](tg://user?id=${to.id})\\!`, {
@@ -139,7 +141,7 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
     return;
   }
 
-  log.info(`${ctx.update.message.from} requested /balance`);
+  log.info(`${ctx.update.message.from.id} requested /balance`);
 
   const from = ctx.update.message.from;
   const fromId = `${from.id}`;
@@ -215,7 +217,7 @@ function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
       try {
         bot.api.sendMessage(
           toTgUserId,
-          `Received tip! New balance: ${balanceFormatted} nyano (Pending: ${pendingFormatted} nyano)`
+          `You just received a tip! New balance: ${balanceFormatted} nyano (Pending: ${pendingFormatted} nyano)`
         );
       } catch (e) {
         log.warn(e);
