@@ -60,7 +60,7 @@ async function receive(
   };
 
   const block = createBlock(secretKey, receiveBlockData);
-  const workResult = await generateWork(previous ?? publicKey);
+  const workResult = await generateWork(previous ?? publicKey, "fffffe0000000000");
   block.block.work = workResult.work;
   const sendResult = await processBlock(block.block, block.block.previous ? 'receive' : 'open');
 
@@ -171,7 +171,7 @@ async function processPendingBlocks(secretKey: string) {
   }
 }
 
-async function generateWork(hash: string) {
+async function generateWork(hash: string, difficulty?: string) {
   await workGenLock.acquireAsync();
 
   try {
@@ -183,19 +183,20 @@ async function generateWork(hash: string) {
     workGenLock.release();
   }
 
-  return await workGenerate(hash);
+  return await workGenerate(hash, difficulty);
 }
 
-async function workGenerate(hash: string): Promise<{
+async function workGenerate(hash: string, difficulty?: string): Promise<{
   hash: string;
   work: string;
   difficulty: string;
   multiplier: string;
 }> {
-  log.info("work_generate:", hash);
+  log.info("work_generate:", hash, difficulty);
   const response = await client._send('work_generate', {
     json_block: 'true',
     hash,
+    ...(difficulty ? { difficulty } : {}),
   });
   return response;
 }
