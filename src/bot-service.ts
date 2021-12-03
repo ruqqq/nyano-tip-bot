@@ -3,6 +3,7 @@ import { convert, Unit } from "nanocurrency";
 import { MnanoContext } from "./context";
 import { BusinessErrors } from "./errors";
 import { TipService } from "./tip-service";
+import log from "loglevel";
 
 async function start(ctx: MnanoContext) {
   if (!ctx.update.message) {
@@ -199,10 +200,14 @@ function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
         to: Unit.NANO,
       });
 
-      bot.api.sendMessage(
-        toTgUserId,
-        `Received tip! New balance: ${balanceFormatted} NANO (Pending: ${pendingFormatted} NANO)`
-      );
+      try {
+        bot.api.sendMessage(
+          toTgUserId,
+          `Received tip! New balance: ${balanceFormatted} NANO (Pending: ${pendingFormatted} NANO)`
+        );
+      } catch (e) {
+        log.warn(e);
+      }
     },
     onTopUp: async (tgUserId) => {
       const { balance, pending } = await TipService.getBalance(tgUserId);
@@ -215,10 +220,14 @@ function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
         to: Unit.NANO,
       });
 
-      bot.api.sendMessage(
-        tgUserId,
-        `Received top-up to balance! New balance: ${balanceFormatted} NANO (Pending: ${pendingFormatted} NANO)`
-      );
+      try {
+        bot.api.sendMessage(
+          tgUserId,
+          `Received top-up to balance! New balance: ${balanceFormatted} NANO (Pending: ${pendingFormatted} NANO)`
+        );
+      } catch (e) {
+        log.warn(e);
+      }
     }
   });
 }
