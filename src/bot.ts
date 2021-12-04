@@ -37,7 +37,12 @@ bot.catch(async (err) => {
   } else {
     log.error("Unknown error:", e);
   }
-  await ctx.reply("A technical error occurred while processing your request. Please try again later.")
+  await ctx.reply(
+    "A technical error occurred while processing your request. Please try again later.",
+    {
+      reply_to_message_id: ctx.update.message?.message_id,
+    }
+  )
 });
 
 bot.start();
