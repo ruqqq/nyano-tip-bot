@@ -1,12 +1,12 @@
 import { Bot } from "grammy";
 import { convert, Unit } from "nanocurrency";
-import { MnanoContext } from "./context";
+import { NyanoTipBotContext } from "./context";
 import { BusinessErrors } from "./errors";
 import { TipService } from "./tip-service";
 import log from "loglevel";
 import { User } from "@grammyjs/types";
 
-async function start(ctx: MnanoContext) {
+async function start(ctx: NyanoTipBotContext) {
   if (!ctx.update.message) {
     return;
   }
@@ -36,7 +36,7 @@ Tip telegram users by replying to their message and send \\"\\/tip \\<value\\>\\
 
 NyanoTipBot holds your balance until you withdraw them to your personal wallet\\. You can get your current balance by using the bot command \\/balance\\.
 
-Despite NyanoTipBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your MnanoBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
+Despite NyanoTipBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your NyanoTipBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
 
 Happy tipping\\!`,
       { parse_mode: "MarkdownV2" }
@@ -45,7 +45,7 @@ Happy tipping\\!`,
   }
 }
 
-async function handleMessage(ctx: MnanoContext): Promise<void> {
+async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
   if (!ctx.update.message || !ctx.update.message.text) {
     return;
   }
@@ -151,7 +151,7 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
   }
 }
 
-async function getBalance(ctx: MnanoContext): Promise<void> {
+async function getBalance(ctx: NyanoTipBotContext): Promise<void> {
   if (!ctx.update.message) {
     return;
   }
@@ -208,7 +208,7 @@ async function getBalance(ctx: MnanoContext): Promise<void> {
   })
 }
 
-async function withdrawBalance(ctx: MnanoContext): Promise<void> {
+async function withdrawBalance(ctx: NyanoTipBotContext): Promise<void> {
   if (!ctx.update.message) {
     return;
   }
@@ -227,7 +227,7 @@ async function withdrawBalance(ctx: MnanoContext): Promise<void> {
   await ctx.reply("We are still building this feature. Please try again later.");
 }
 
-function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
+function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
   TipService.subscribeToOnReceiveBalance({
     onTip: async (fromTgUserId, toTgUserId) => {
       const { balance, pending } = await TipService.getBalance(toTgUserId);

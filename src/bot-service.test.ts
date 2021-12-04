@@ -1,7 +1,7 @@
 import { Chat, Message, Update, User } from "@grammyjs/types";
 import { when } from "jest-when";
 import { BotService } from "./bot-service";
-import { MnanoContext } from "./context";
+import { NyanoTipBotContext } from "./context";
 import { BusinessErrors } from "./errors";
 import { TipService } from "./tip-service";
 
@@ -104,7 +104,7 @@ Tip telegram users by replying to their message and send \\"\\/tip \\<value\\>\\
 
 NyanoTipBot holds your balance until you withdraw them to your personal wallet\\. You can get your current balance by using the bot command \\/balance\\.
 
-Despite NyanoTipBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your MnanoBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
+Despite NyanoTipBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your NyanoTipBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
 
 Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.reply).toHaveBeenCalledWith(
@@ -616,7 +616,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
   });
 });
 
-function createContext(update: Update): MnanoContext {
+function createContext(update: Update): NyanoTipBotContext {
   return {
     update,
     reply: jest.fn(() => createTgMessage()),

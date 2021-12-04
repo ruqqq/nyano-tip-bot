@@ -1,12 +1,12 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { Bot, GrammyError, HttpError, NextFunction } from "grammy";
-import { MnanoContext } from "./context";
+import { NyanoTipBotContext } from "./context";
 import { BotService } from "./bot-service";
 import log from "loglevel";
 log.setDefaultLevel(process.env.LOG_LEVEL as any ?? "INFO");
 
-function wrapNext(fn: (ctx: MnanoContext) => Promise<void>): (ctx: MnanoContext, next: NextFunction) => Promise<void> {
+function wrapNext(fn: (ctx: NyanoTipBotContext) => Promise<void>): (ctx: NyanoTipBotContext, next: NextFunction) => Promise<void> {
   return async (ctx, next) => {
     await fn(ctx);
     next();
@@ -14,7 +14,7 @@ function wrapNext(fn: (ctx: MnanoContext) => Promise<void>): (ctx: MnanoContext,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const bot = new Bot<MnanoContext>(process.env.BOT_TOKEN!);
+const bot = new Bot<NyanoTipBotContext>(process.env.BOT_TOKEN!);
 
 bot.command("start", BotService.start);
 bot.command("balance", BotService.getBalance);
