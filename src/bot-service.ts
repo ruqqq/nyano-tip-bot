@@ -133,7 +133,7 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
     log.info(`${fromId} sending tip to ${toId}`);
 
     try {
-      const msg = await ctx.reply(`Sending ${amountString.replace(/\./, "\\.")} nyano to [${to.first_name}](tg://user?id=${to.id})\\!`, {
+      const msg = await ctx.reply(`Sending **${amountString.replace(/\./, "\\.")}** nyano to [${to.first_name}](tg://user?id=${to.id})\\.\\.\\.`, {
         parse_mode: "MarkdownV2",
         reply_to_message_id: ctx.update.message.message_id,
       });
@@ -141,7 +141,7 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
       await ctx.api.editMessageText(
         msg.chat.id,
         msg.message_id,
-        `[${amountString.replace(/\./, "\\.")}](${url}) nyano sent to [${
+        `**[${amountString.replace(/\./, "\\.")}](${url})** nyano sent to [${
           to.first_name
         }](tg://user?id=${to.id})\\!`,
         {

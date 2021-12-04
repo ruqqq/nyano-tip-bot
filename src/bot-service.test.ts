@@ -322,7 +322,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        `[100](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+        `**[100](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
         {
           parse_mode: "MarkdownV2",
           reply_markup: {
@@ -368,7 +368,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        `[10](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+        `**[10](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
         {
           parse_mode: "MarkdownV2",
           reply_markup: {
@@ -414,7 +414,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        `[10\\.5](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+        `**[10\\.5](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
         {
           parse_mode: "MarkdownV2",
           reply_markup: {
@@ -460,7 +460,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        `[10](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+        `**[10](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
         {
           parse_mode: "MarkdownV2",
           reply_markup: {
@@ -511,7 +511,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        `[100](http://block-url.com) nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
+        `**[100](http://block-url.com)** nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
         {
           parse_mode: "MarkdownV2",
           reply_markup: {
@@ -571,7 +571,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        `[100](http://block-url.com) nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
+        `**[100](http://block-url.com)** nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
         {
           parse_mode: "MarkdownV2",
           reply_markup: {
