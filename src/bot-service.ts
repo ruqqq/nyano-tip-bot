@@ -103,7 +103,6 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
 
     const toId = `${to.id}`;
     const amount = BigInt(convert(amountString, { from: Unit.nano, to: Unit.raw }));
-    const { balance: prevToBalance } = await TipService.getBalance(toId);
 
     log.info(`${fromId} sending tip to ${toId}`);
 
@@ -121,20 +120,18 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
         }](tg://user?id=${to.id})\\!`,
         {
           parse_mode: "MarkdownV2",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "What's this?",
+                  url: `https://t.me/${ctx.me.username}?start`,
+                },
+              ],
+            ],
+          },
         }
       );
-
-      if (prevToBalance === 0n) {
-        await ctx.reply(
-          `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Nano is an actual cryptocurrency\\. Click the button below to learn more\\.`,
-          {
-            parse_mode: "MarkdownV2",
-            reply_markup: {
-              inline_keyboard: [[{ text: "Learn More", url: `https://t.me/${ctx.me.username}?start` }]],
-            },
-          }
-        );
-      }
     } catch (e) {
       if (e === BusinessErrors.INSUFFICIENT_BALANCE) {
         await ctx.reply("Insufficient balance\\. Please top\\-up and try again\\.", {

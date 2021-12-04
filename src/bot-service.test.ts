@@ -317,7 +317,19 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         expect.anything(),
         expect.anything(),
         `[100](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        { parse_mode: "MarkdownV2" }
+        {
+          parse_mode: "MarkdownV2",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "What's this?",
+                  url: `https://t.me/bot_username?start`,
+                },
+              ],
+            ],
+          },
+        }
       );
     });
 
@@ -351,7 +363,19 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         expect.anything(),
         expect.anything(),
         `[10](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        { parse_mode: "MarkdownV2" }
+        {
+          parse_mode: "MarkdownV2",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "What's this?",
+                  url: `https://t.me/bot_username?start`,
+                },
+              ],
+            ],
+          },
+        }
       );
     });
 
@@ -385,7 +409,19 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         expect.anything(),
         expect.anything(),
         `[10\\.5](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        { parse_mode: "MarkdownV2" }
+        {
+          parse_mode: "MarkdownV2",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "What's this?",
+                  url: `https://t.me/bot_username?start`,
+                },
+              ],
+            ],
+          },
+        }
       );
     });
 
@@ -419,7 +455,19 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         expect.anything(),
         expect.anything(),
         `[10](http://block-url.com) nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        { parse_mode: "MarkdownV2" }
+        {
+          parse_mode: "MarkdownV2",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "What's this?",
+                  url: `https://t.me/bot_username?start`,
+                },
+              ],
+            ],
+          },
+        }
       );
     });
 
@@ -458,40 +506,20 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
         expect.anything(),
         expect.anything(),
         `[100](http://block-url.com) nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
-        { parse_mode: "MarkdownV2" }
+        {
+          parse_mode: "MarkdownV2",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "What's this?",
+                  url: `https://t.me/bot_username?start`,
+                },
+              ],
+            ],
+          },
+        }
       );
-    });
-
-    it("should send additional prompt if it is the first time the recipient receives a tip", async () => {
-      const user1 = createTgUser();
-      const user2 = createTgUser();
-      const message = createTgMessage({
-        from: user1,
-        text: "!tip 10",
-        reply_to_message: {
-          ...createTgMessage(),
-          from: user2,
-          reply_to_message: undefined,
-        },
-      });
-      when(TipService.getBalance)
-        .calledWith(`${user2.id}`)
-        .mockResolvedValue({ balance: 0n, pending: 0n });
-
-      const ctx = createContext(
-        createTgUpdate({
-          message,
-        })
-      );
-      await BotService.handleMessage(ctx);
-
-      expect(ctx.reply).toHaveBeenCalledWith(
-        `Congratulations [${user2.first_name}](tg://user?id=${user2.id}) on your first tip\\! Nano is an actual cryptocurrency\\. Click the button below to learn more\\.`, {
-        parse_mode: "MarkdownV2",
-        reply_markup: {
-          inline_keyboard: [[{ text: "Learn More", url: "https://t.me/bot_username?start" }]],
-        },
-      });
     });
 
     it("should reply that the user has insufficient balance and prompt to top up", async () => {
