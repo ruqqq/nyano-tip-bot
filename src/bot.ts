@@ -25,7 +25,7 @@ bot.on("message", wrapNext(BotService.handleMessage));
 
 BotService.sendMessageOnTopUp(bot);
 
-bot.catch((err) => {
+bot.catch(async (err) => {
   const ctx = err.ctx;
   log.error(`Error while handling update ${ctx.update.update_id}:`);
   const e = err.error;
@@ -36,7 +36,7 @@ bot.catch((err) => {
   } else {
     log.error("Unknown error:", e);
   }
-  ctx.reply("A technical error occurred while processing your request. Please try again later.")
+  await ctx.reply("A technical error occurred while processing your request. Please try again later.")
 });
 
 bot.start();
