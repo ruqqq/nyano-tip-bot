@@ -60,7 +60,7 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
   }
 
   const text = " " + ctx.update?.message?.text + " ";
-  const matchesOnStart = text?.match(/^ \/tip(\s[0-9]+(\.[0-9]+)?)? $/);
+  const matchesOnStart = text?.match(/^ \/tip(\s[0-9]+(\.[0-9]+)?)? /);
   const matchesInBetween = text?.match(/ !tip(\s[0-9]+(\.[0-9]+)?)? /);
   const matches = matchesOnStart || matchesInBetween;
   const amountString =
