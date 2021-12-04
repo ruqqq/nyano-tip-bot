@@ -1,10 +1,19 @@
-import { Bot } from "grammy";
+import { Bot, NextFunction } from "grammy";
 import { convert, Unit } from "nanocurrency";
 import { NyanoTipBotContext } from "./context";
 import { BusinessErrors } from "./errors";
 import { TipService } from "./tip-service";
 import log from "loglevel";
 import { User } from "@grammyjs/types";
+import { TgUsernameMapperService } from "./tg-username-mapper-service";
+
+async function usernameRecorderMiddleware(ctx: NyanoTipBotContext, next: NextFunction) {
+  const from = ctx.update.message?.from;
+  if (from?.username) {
+    await TgUsernameMapperService.put(from.username, from.id);
+  }
+  await next();
+}
 
 async function start(ctx: NyanoTipBotContext) {
   if (!ctx.update.message) {
@@ -87,6 +96,23 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
     } else if (mentionEntities[0].type === "text_mention") {
       const entity = mentionEntities[0];
       to = entity.user;
+    } else if (mentionEntities[0].type === "mention") {
+      const entity = mentionEntities[0];
+      const username = ctx.update.message.text.substr(entity.offset + 1, entity.length - 1);
+      const userId = await TgUsernameMapperService.getId(username);
+      if (!userId) {
+        await ctx.reply("Unable to get recipient id, please try again by replying to recipient's message.");
+        return;
+      }
+
+      try {
+        const member = await ctx.getChatMember(userId);
+        to = member.user;
+      } catch (e) {
+        log.error(e);
+        await ctx.reply("Unable to get recipient id, please try again by replying to recipient's message.");
+        return;
+      }
     } else {
       await ctx.reply("Unable to get recipient id, please try again by replying to recipient's message.");
       return;
@@ -270,6 +296,7 @@ function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
 }
 
 export const BotService = {
+  usernameRecorderMiddleware,
   start,
   handleMessage,
   getBalance,

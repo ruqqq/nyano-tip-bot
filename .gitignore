@@ -6,3 +6,4 @@ node_modules
 db/
 test-db/
 work-cache-db/
+tg-username-db/

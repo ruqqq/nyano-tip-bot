@@ -9,13 +9,14 @@ log.setDefaultLevel(process.env.LOG_LEVEL as any ?? "INFO");
 function wrapNext(fn: (ctx: NyanoTipBotContext) => Promise<void>): (ctx: NyanoTipBotContext, next: NextFunction) => Promise<void> {
   return async (ctx, next) => {
     await fn(ctx);
-    next();
+    await next();
   };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const bot = new Bot<NyanoTipBotContext>(process.env.BOT_TOKEN!);
 
+bot.use(BotService.usernameRecorderMiddleware);
 bot.command("start", BotService.start);
 bot.command("balance", BotService.getBalance);
 bot.command("withdraw", BotService.withdrawBalance);

@@ -3,9 +3,11 @@ import { when } from "jest-when";
 import { BotService } from "./bot-service";
 import { NyanoTipBotContext } from "./context";
 import { BusinessErrors } from "./errors";
+import { TgUsernameMapperService } from "./tg-username-mapper-service";
 import { TipService } from "./tip-service";
 
 jest.mock("./tip-service");
+jest.mock("./tg-username-mapper-service");
 
 describe("BotService", () => {
   describe("start", () => {
@@ -202,9 +204,13 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       expect(ctx.reply).toHaveBeenCalledWith("Reply to a message or mention a user to tip. Multiple mentions are not supported.");
     });
 
-    it("should not tip users when the mention is not of type text_mention", async () => {
+    it("should not tip user when unable to retrieve user details from username", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser({ username: "user2" });
+      when(TgUsernameMapperService.getId)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        .calledWith(user2.username!)
+        .mockResolvedValue(null);
       const ctx = createContext(
         createTgUpdate({
           message: createTgMessage({
@@ -471,7 +477,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
       );
     });
 
-    it("should tip recipient 100 nyano when '!tip 100' is sent with a mention to single user", async () => {
+    it("should tip recipient 100 nyano when '!tip 100' is sent with a mention to single user (text_mention)", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser({
         username: "omar_new",
@@ -483,7 +489,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
           {
             type: 'text_mention',
             offset: 0,
-            length: 13,
+            length: 6,
             user: user2,
           },
         ],
@@ -500,6 +506,66 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
           message,
         })
       );
+      await BotService.handleMessage(ctx);
+
+      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        `[100](http://block-url.com) nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
+        {
+          parse_mode: "MarkdownV2",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "What's this?",
+                  url: `https://t.me/bot_username?start`,
+                },
+              ],
+            ],
+          },
+        }
+      );
+    });
+
+    it("should tip recipient 100 nyano when '!tip 100' is sent with a mention to single user (mention)", async () => {
+      const user1 = createTgUser();
+      const user2 = createTgUser({
+        username: "omar_new",
+      });
+      const message = createTgMessage({
+        from: user1,
+        text: `@${user2.username} !tip 100`,
+        entities: [
+          {
+            type: 'mention',
+            offset: 0,
+            length: 9,
+          },
+        ],
+      });
+      when(TgUsernameMapperService.getId)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        .calledWith(user2.username!)
+        .mockResolvedValue(user2.id);
+      when(TipService.getBalance)
+        .calledWith(`${user2.id}`)
+        .mockResolvedValue({ balance: 100000000000000000000000000n, pending: 0n });
+      when(TipService.tipUser)
+        .calledWith(`${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
+        .mockResolvedValue("http://block-url.com");
+
+      const ctx = createContext(
+        createTgUpdate({
+          message,
+        })
+      );
+      when(ctx.getChatMember)
+        .calledWith(user2.id)
+        .mockResolvedValue({
+          user: user2,
+          status: "member",
+        });
       await BotService.handleMessage(ctx);
 
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
@@ -648,6 +714,7 @@ function createContext(update: Update): NyanoTipBotContext {
   return {
     update,
     reply: jest.fn(() => createTgMessage()),
+    getChatMember: jest.fn(),
     api: {
       editMessageText: jest.fn(),
     },
