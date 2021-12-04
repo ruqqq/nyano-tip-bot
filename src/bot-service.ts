@@ -4,6 +4,7 @@ import { MnanoContext } from "./context";
 import { BusinessErrors } from "./errors";
 import { TipService } from "./tip-service";
 import log from "loglevel";
+import { User } from "@grammyjs/types";
 
 async function start(ctx: MnanoContext) {
   if (!ctx.update.message) {
@@ -45,6 +46,10 @@ Happy tipping\\!`,
 }
 
 async function handleMessage(ctx: MnanoContext): Promise<void> {
+  if (!ctx.update.message || !ctx.update.message.text) {
+    return;
+  }
+
   const text = " " + ctx.update?.message?.text + " ";
   const matchesOnStart = text?.match(/^ \/tip(\s[0-9]+(\.[0-9]+)?)? $/);
   const matchesInBetween = text?.match(/ !tip(\s[0-9]+(\.[0-9]+)?)? /);
@@ -53,28 +58,49 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
     (((matchesOnStart && matchesOnStart[1]) ||
     (matchesInBetween && matchesInBetween[1])) ?? "10").trim();
 
-  if (matches && ctx.update.message) {
-    if (!ctx.update.message.reply_to_message) {
-      await ctx.reply("Reply to a message to tip.")
+  if (matches) {
+    if (!ctx.update.message.from) {
       return;
     }
-    if (!ctx.update.message.from || !ctx.update.message.reply_to_message.from) {
-      return;
-    }
+
     if (ctx.update.message.from.is_bot) {
-      return;
-    }
-    if (ctx.update.message.reply_to_message.from.is_bot) {
-      return;
-    }
-    if (ctx.update.message.from.id === ctx.update.message.reply_to_message.from.id) {
-      await ctx.reply("Try tipping other people instead.")
       return;
     }
 
     const from = ctx.update.message.from;
     const fromId = `${from.id}`;
-    const to = ctx.update.message.reply_to_message.from;
+    const mentionEntities =
+      ctx.update.message.entities?.filter(entity => ['mention', 'text_mention'].includes(entity.type)) || [];
+
+    if (
+      (!ctx.update.message.reply_to_message ||
+        !ctx.update.message.reply_to_message.from) &&
+      mentionEntities.length !== 1
+    ) {
+      await ctx.reply("Reply to a message or mention a user to tip. Multiple mentions are not supported.");
+      return;
+    }
+
+    let to: User;
+    if (ctx.update.message.reply_to_message?.from) {
+      to = ctx.update.message.reply_to_message.from;
+    } else if (mentionEntities[0].type === "text_mention") {
+      const entity = mentionEntities[0];
+      to = entity.user;
+    } else {
+      await ctx.reply("Unable to get recipient id, please try again by replying to recipient's message.");
+      return;
+    }
+
+    if (to.is_bot) {
+      return;
+    }
+
+    if (from.id === to.id) {
+      await ctx.reply("Try tipping other people instead.")
+      return;
+    }
+
     const toId = `${to.id}`;
     const amount = BigInt(convert(amountString, { from: Unit.nano, to: Unit.raw }));
     const { balance: prevToBalance } = await TipService.getBalance(toId);
