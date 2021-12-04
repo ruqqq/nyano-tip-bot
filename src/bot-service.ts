@@ -100,7 +100,7 @@ async function handleMessage(ctx: MnanoContext): Promise<void> {
 
       if (prevToBalance === 0n) {
         await ctx.reply(
-          `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Nano is an actual cryptocurrency\\. Click the button below to learn more\\.`,
+          `Congratulations [${to.first_name}](tg://user?id=${to.id}) on your first tip\\! Nyano/Nano is an actual currency\\. Click the button below to learn more\\.`,
           {
             parse_mode: "MarkdownV2",
             reply_markup: {
@@ -204,7 +204,7 @@ async function withdrawBalance(ctx: MnanoContext): Promise<void> {
 function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
   TipService.subscribeToOnReceiveBalance({
     onTip: async (fromTgUserId, toTgUserId) => {
-      const { balance, pending } = await TipService.getBalance(toTgUserId);
+      /* const { balance, pending } = await TipService.getBalance(toTgUserId);
       const balanceFormatted = convert(balance.toString(), {
         from: Unit.raw,
         to: Unit.nano,
@@ -221,7 +221,7 @@ function sendMessageOnTopUp(bot: Bot<MnanoContext>) {
         );
       } catch (e) {
         log.warn(e);
-      }
+      } */
     },
     onTopUp: async (tgUserId) => {
       const { balance, pending } = await TipService.getBalance(tgUserId);
