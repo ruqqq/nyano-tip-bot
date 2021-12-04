@@ -5,10 +5,14 @@ async function put(
   username: string,
   id: number,
 ): Promise<void> {
-  await tgUsernameDb.del(`user-${username}`);
-  await tgUsernameDb.del(`id-${id}`);
-  await tgUsernameDb.put(`user-${username}`, `${id}`);
-  await tgUsernameDb.put(`id-${id}`, username);
+  const existingUsername = await getUsername(id);
+  if (!existingUsername || existingUsername !== username) {
+    if (existingUsername) {
+      await tgUsernameDb.del(`user-${existingUsername}`);
+    }
+    await tgUsernameDb.put(`user-${username}`, `${id}`);
+    await tgUsernameDb.put(`id-${id}`, username);
+  }
 }
 
 async function getId(
@@ -27,7 +31,7 @@ async function getId(
 }
 
 async function getUsername(
-  id: string
+  id: number,
 ): Promise<string | null> {
   try {
     return await tgUsernameDb.get(`id-${id}`);
