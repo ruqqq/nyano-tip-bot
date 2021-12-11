@@ -6,6 +6,7 @@ import { TipService } from "./tip-service";
 import log from "loglevel";
 import { User } from "@grammyjs/types";
 import { TgUsernameMapperService } from "./tg-username-mapper-service";
+import { Menu } from "@grammyjs/menu";
 
 async function usernameRecorderMiddleware(ctx: NyanoTipBotContext, next: NextFunction) {
   const from = ctx.update.message?.from;
@@ -13,45 +14,6 @@ async function usernameRecorderMiddleware(ctx: NyanoTipBotContext, next: NextFun
     await TgUsernameMapperService.put(from.username, from.id);
   }
   await next();
-}
-
-async function start(ctx: NyanoTipBotContext) {
-  if (!ctx.update.message) {
-    return;
-  }
-  if (!ctx.update.message.from) {
-    return;
-  }
-  if (ctx.update.message.from.is_bot) {
-    return;
-  }
-  if (ctx.update.message.chat.type !== "private") {
-    return;
-  }
-
-  const payload = ctx.update.message?.text?.replace("/start", "").trim();
-
-  log.info(`${ctx.update.message.from.id} requested /start ${payload}`);
-
-  if (payload === "topup") {
-    await BotService.getBalance(ctx);
-  } else if (payload === "withdraw") {
-    await BotService.withdrawBalance(ctx);
-  } else {
-    await ctx.reply(
-      `Nano is a cryptocurrency \\- it can be used for real life transactions\\. You can check the fiat value of Nano [here](https://www.coingecko.com/en/coins/nano/sgd)\\. Nyano is just a smaller unit representation of Nano\\.
-
-Tip telegram users by replying to their message and send \\"\\/tip \\<value\\>\\" where \\<value\\> is the amount you wish to tip\\, e\\.g\\. 0\\.001\\.
-
-NyanoTipBot holds your balance until you withdraw them to your personal wallet\\. You can get your current balance by using the bot command \\/balance\\.
-
-Despite NyanoTipBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your NyanoTipBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
-
-Happy tipping\\!`,
-      { parse_mode: "MarkdownV2" }
-    );
-    await getBalance(ctx);
-  }
 }
 
 async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
@@ -174,25 +136,39 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
   }
 }
 
-async function getBalance(ctx: NyanoTipBotContext): Promise<void> {
-  if (!ctx.update.message) {
-    return;
+async function getBlockExplorerUrl(ctx: NyanoTipBotContext): Promise<string> {
+  if (!ctx.from) {
+    throw new Error("From not found in context");
   }
-  if (!ctx.update.message.from) {
-    return;
+  if (ctx.from.is_bot) {
+    throw new Error("Trying to generate block explorer url for a bot");
   }
-  if (ctx.update.message.from.is_bot) {
-    return;
+  const from = ctx.from;
+  const fromId = `${from.id}`;
+  return await TipService.getLinkForAccount(fromId);
+}
+
+async function getTopupUrl(ctx: NyanoTipBotContext): Promise<string> {
+  if (!ctx.from) {
+    throw new Error("From not found in context");
+  }
+  if (ctx.from.is_bot) {
+    throw new Error("Trying to generate topup url for a bot");
+  }
+  const from = ctx.from;
+  const fromId = `${from.id}`;
+  return await TipService.getLinkForTopUp(fromId);
+}
+
+async function generateBalanceMessage(ctx: NyanoTipBotContext): Promise<string> {
+  if (!ctx.from) {
+    throw new Error("From not found in context");
+  }
+  if (ctx.from.is_bot) {
+    throw new Error("Trying to generate topup url for a bot");
   }
 
-  if (ctx.update.message.chat.type !== "private") {
-    await ctx.reply(`DM me (@${ctx.me.username}) privately to check your balance.`)
-    return;
-  }
-
-  log.info(`${ctx.update.message.from.id} requested /balance`);
-
-  const from = ctx.update.message.from;
+  const from = ctx.from;
   const fromId = `${from.id}`;
   const account = await TipService.getAccount(fromId);
   const { balance, pending } = await TipService.getBalance(fromId);
@@ -212,42 +188,68 @@ async function getBalance(ctx: NyanoTipBotContext): Promise<void> {
     from: Unit.raw,
     to: Unit.NANO,
   });
-  const topUpUrl = await TipService.getLinkForTopUp(fromId);
-  const accountExplorerUrl = await TipService.getLinkForAccount(fromId);
 
-  await ctx.reply(`Balance: ${balanceFormatted} nyano (${balanceFormattedNano} NANO)\nPending: ${pendingFormatted} nyano (${pendingFormattedNano} NANO)\n\nAddress: ${account.address}`, {
-    reply_markup: {
-      inline_keyboard: [
-        [{
-          text: "Top-up",
-          url: topUpUrl,
-        }],
-        [{
-          text: "Account Explorer",
-          url: accountExplorerUrl,
-        }],
-      ],
-    },
+  return `Balance: ${balanceFormatted} nyano (${balanceFormattedNano} NANO)\nPending: ${pendingFormatted} nyano (${pendingFormattedNano} NANO)\n\nAddress: ${account.address}`;
+}
+
+async function handleBalanceCommand(ctx: NyanoTipBotContext): Promise<void> {
+  if (!ctx.from) {
+    return;
+  }
+
+  if (ctx.from.is_bot) {
+    return;
+  }
+
+  if (ctx.message && ctx.message.chat.type !== "private") {
+    await ctx.reply(`DM me (@${ctx.me.username}) privately to check your balance.`)
+    return;
+  }
+
+  log.info(`${ctx.from.id} requested /balance`);
+
+  const text = await generateBalanceMessage(ctx);
+
+  await ctx.reply(text, {
+    reply_markup: accountBalanceMenu,
   })
 }
 
 async function withdrawBalance(ctx: NyanoTipBotContext): Promise<void> {
-  if (!ctx.update.message) {
+  if (!ctx.from) {
     return;
   }
-  if (!ctx.update.message.from) {
-    return;
-  }
-  if (ctx.update.message.from.is_bot) {
+  if (ctx.from.is_bot) {
     return;
   }
 
-  if (ctx.update.message.chat.type !== "private") {
+  if (ctx.message && ctx.message.chat.type !== "private") {
     await ctx.reply(`DM me (@${ctx.me.username}) privately to withdraw your balance.`)
     return;
   }
 
   await ctx.reply("We are still building this feature. Please try again later.");
+}
+
+async function handleStartCommand(ctx: NyanoTipBotContext) {
+  if (!ctx.from) {
+    return;
+  }
+  if (ctx.from.is_bot) {
+    return;
+  }
+
+  if (ctx.message && ctx.message.chat.type !== "private") {
+    return;
+  }
+
+  log.info(`${ctx.from.id} requested /start`);
+
+  if (!ctx.match) {
+    await ctx.reply(startText, { parse_mode: "MarkdownV2", reply_markup: startMenu });
+  } else if (ctx.match === "topup") {
+    await ctx.reply(await generateBalanceMessage(ctx), { reply_markup: accountBalanceMenu });
+  }
 }
 
 function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
@@ -295,11 +297,64 @@ function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
   });
 }
 
+const startText = `[Nano](https://nano.org/) is a cryptocurrency that allows for instant and feeless payment\\. This makes it the perfect currency to tip others\\.
+
+Ways to tip users\\:
+1\\. Reply to their messages with \\"\\/tip \\<value\\>\\"
+2\\. Tag the user and type \\"\\/tip \\<value\\>\\" in your message
+3\\. Reply or tag user and include \\"\\!tip \\<value\\>\\" anywhere in your message
+
+Note\\:
+\\- The value is in Nyano \\(1 nyano \\= 0\\.000001 nano\\)
+\\- If you do not specify the value\\, it will default to tip 10 Nyano
+
+Have fun tipping\\!`;
+
+const infoLedgerText = `Despite NyanoTipBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\.
+You can view your NyanoTipBot wallet on a block explorer website\\.
+
+Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
+`;
+
+const startMenu: Menu = new Menu("start-menu")
+  .submenu("Withdraw to personal wallet",  "submenu-with-back", (ctx) =>
+    ctx.editMessageText("")
+  )
+  .row()
+  .submenu("Track your tips journey",  "info-ledger-menu", (ctx) =>
+    ctx.editMessageText(infoLedgerText, { parse_mode: "MarkdownV2" })
+  )
+  .row()
+  .submenu("View account balance", "account-balance-menu", async (ctx) =>
+    ctx.editMessageText(await generateBalanceMessage(ctx))
+  )
+  .row()
+  .url("1 NANO = x SGD?", "https://www.coingecko.com/en/coins/nano/sgd");
+const submenuWithBack: Menu = new Menu("submenu-with-back")
+  .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
+const infoLedgerMenu: Menu = new Menu("info-ledger-menu")
+  .dynamic(async (ctx, range) => {
+    return range
+      .url("My Account on Block Explorer", await getBlockExplorerUrl(ctx)).row()
+      .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
+  });
+const accountBalanceMenu: Menu = new Menu("account-balance-menu")
+  .dynamic(async (ctx, range) => {
+    return range
+      .url("Top-up my tipping wallet", await getTopupUrl(ctx)).row()
+      .url("My Account on Block Explorer", await getBlockExplorerUrl(ctx)).row()
+      .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
+  });
+startMenu.register(submenuWithBack);
+startMenu.register(infoLedgerMenu);
+startMenu.register(accountBalanceMenu);
+
 export const BotService = {
   usernameRecorderMiddleware,
-  start,
   handleMessage,
-  getBalance,
+  handleBalanceCommand,
+  handleStartCommand,
   withdrawBalance,
   sendMessageOnTopUp,
+  startMenu,
 };

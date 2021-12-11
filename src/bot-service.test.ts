@@ -8,6 +8,20 @@ import { TipService } from "./tip-service";
 
 jest.mock("./tip-service");
 jest.mock("./tg-username-mapper-service");
+jest.mock("@grammyjs/menu", () => {
+  const menu: any = {
+    row: jest.fn(() => menu),
+    register: jest.fn(() => menu),
+    submenu: jest.fn(() => menu),
+    url: jest.fn(() => menu),
+    back: jest.fn(() => menu),
+    dynamic: jest.fn(() => menu),
+  };
+
+  return {
+    Menu: jest.fn(() => menu),
+  }
+});
 
 describe("BotService", () => {
   describe("start", () => {
@@ -22,7 +36,7 @@ describe("BotService", () => {
           }),
         })
       );
-      await BotService.start(ctx);
+      await BotService.handleStartCommand(ctx);
 
       expect(ctx.reply).not.toHaveBeenCalled();
     });
@@ -55,17 +69,12 @@ describe("BotService", () => {
           }),
         })
       );
-      await BotService.start(ctx);
+      await BotService.handleStartCommand(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
         "Balance: 10 nyano (0.00001 NANO)\nPending: 0 nyano (0 NANO)\n\nAddress: nanoAddress",
         {
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "Top-up", url: "http://google.com" }],
-              [{ text: "Account Explorer", url: "http://google.com" }],
-            ],
-          },
+          reply_markup: expect.anything(),
         }
       );
     });
@@ -98,28 +107,12 @@ describe("BotService", () => {
           }),
         })
       );
-      await BotService.start(ctx);
+      await BotService.handleStartCommand(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith(`Nano is a cryptocurrency \\- it can be used for real life transactions\\. You can check the fiat value of Nano [here](https://www.coingecko.com/en/coins/nano/sgd)\\. Nyano is just a smaller unit representation of Nano\\.
-
-Tip telegram users by replying to their message and send \\"\\/tip \\<value\\>\\" where \\<value\\> is the amount you wish to tip\\, e\\.g\\. 0\\.001\\.
-
-NyanoTipBot holds your balance until you withdraw them to your personal wallet\\. You can get your current balance by using the bot command \\/balance\\.
-
-Despite NyanoTipBot holding your balance\\, because Nano is a cryptocurrency\\, the ledger is transparent\\. You can view your NyanoTipBot wallet via the balance command on a block explorer\\. Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
-
-Happy tipping\\!`, { parse_mode: "MarkdownV2" });
-      expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 10 nyano (0.00001 NANO)\nPending: 0 nyano (0 NANO)\n\nAddress: nanoAddress",
-        {
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "Top-up", url: "http://google.com" }],
-              [{ text: "Account Explorer", url: "http://google.com" }],
-            ],
-          },
-        }
-      );
+      expect(ctx.reply).toHaveBeenCalledWith(expect.stringMatching(/.+/), {
+        parse_mode: "MarkdownV2",
+        reply_markup: expect.anything(),
+      });
     });
   });
 
@@ -662,17 +655,12 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
           }),
         })
       );
-      await BotService.getBalance(ctx);
+      await BotService.handleBalanceCommand(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
         "Balance: 10 nyano (0.00001 NANO)\nPending: 0 nyano (0 NANO)\n\nAddress: nanoAddress",
         {
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "Top-up", url: "http://google.com" }],
-              [{ text: "Account Explorer", url: "http://google.com" }],
-            ],
-          },
+          reply_markup: expect.anything(),
         }
       );
     });
@@ -687,7 +675,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
           }),
         })
       );
-      await BotService.getBalance(ctx);
+      await BotService.handleBalanceCommand(ctx);
 
       expect(ctx.reply).not.toHaveBeenCalled();
     });
@@ -703,7 +691,7 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
           }),
         })
       );
-      await BotService.getBalance(ctx);
+      await BotService.handleBalanceCommand(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith("DM me (@bot_username) privately to check your balance.");
     });
@@ -713,6 +701,9 @@ Happy tipping\\!`, { parse_mode: "MarkdownV2" });
 function createContext(update: Update): NyanoTipBotContext {
   return {
     update,
+    ...(update.message?.from ? { from: update.message.from } : {}),
+    ...(update.message? { message: update.message} : {}),
+    match: update.message?.text?.startsWith("/") ? update.message?.text?.split(" ").slice(1).join(" ") : undefined,
     reply: jest.fn(() => createTgMessage()),
     getChatMember: jest.fn(),
     api: {

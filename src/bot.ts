@@ -17,12 +17,12 @@ function wrapNext(fn: (ctx: NyanoTipBotContext) => Promise<void>): (ctx: NyanoTi
 const bot = new Bot<NyanoTipBotContext>(process.env.BOT_TOKEN!);
 
 bot.use(BotService.usernameRecorderMiddleware);
-bot.command("start", BotService.start);
-bot.command("balance", BotService.getBalance);
+bot.use(BotService.startMenu);
+bot.command("balance", BotService.handleBalanceCommand);
 bot.command("withdraw", BotService.withdrawBalance);
 bot.command("tip", BotService.handleMessage);
-
 bot.on("message", wrapNext(BotService.handleMessage));
+bot.command("start", BotService.handleStartCommand);
 
 BotService.sendMessageOnTopUp(bot);
 
