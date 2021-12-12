@@ -14,6 +14,7 @@ jest.mock("@grammyjs/menu", () => {
     register: jest.fn(() => menu),
     submenu: jest.fn(() => menu),
     url: jest.fn(() => menu),
+    text: jest.fn(() => menu),
     back: jest.fn(() => menu),
     dynamic: jest.fn(() => menu),
   };

@@ -1,3 +1,11 @@
-import { Context } from "grammy";
+import { Context, SessionFlavor } from "grammy";
 
-export type NyanoTipBotContext = Context;
+export type NyanoTipBotContext = Context & SessionFlavor<NyanoTipBotSession>;
+
+export interface NyanoTipBotSession {
+  withdrawalSession?: {
+    fromUserId: string;
+    toAddress: string;
+    amount: string;
+  };
+};

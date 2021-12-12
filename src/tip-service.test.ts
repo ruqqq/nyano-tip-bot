@@ -221,6 +221,85 @@ describe("TipService", () => {
     });
   });
 
+  describe("withdraw to personal wallet", () => {
+    it("should throw INSUFFICIENT_BALANCE error when requestor has not enough balance", async () => {
+      when(Accounts.getAccountByTgUserId)
+        .calledWith(account1.tgUserId)
+        .mockResolvedValue(account1);
+      when(Nano.getBalance)
+        .calledWith(account1.address)
+        .mockResolvedValue({ balance: 0n, pending: 0n });
+
+      await expect(TipService.withdrawToAddress(
+        account1.tgUserId,
+        "",
+        1n,
+      )).rejects.toThrowError(BusinessErrors.INSUFFICIENT_BALANCE);
+    });
+
+    it("should withdraw when requestor has sufficient balance", async () => {
+      when(Accounts.getAccountByTgUserId)
+        .calledWith(account1.tgUserId)
+        .mockResolvedValue(account1);
+      when(Nano.getBalance)
+        .calledWith(account1.address)
+        .mockResolvedValue({ balance: 1n, pending: 0n });
+      when(Nano.getSecretKeyFromSeed)
+        .calledWith(expect.anything(), account1.seedIndex)
+        .mockReturnValue(account1KeyMetadata.secretKey);
+      when(Nano.extractAccountMetadata)
+        .calledWith(account1KeyMetadata.secretKey)
+        .mockReturnValue(account1KeyMetadata);
+      when(Nano.send)
+        .calledWith(
+          account1KeyMetadata.secretKey,
+          "withdrawAddress",
+          1n,
+        )
+        .mockResolvedValue( { block: { hash: "hash" } } as any);
+      when(Nano.getBlockExplorerUrl)
+        .calledWith(expect.anything())
+        .mockImplementation((hash) => `http://${hash}`);
+
+      const url = await TipService.withdrawToAddress(
+        account1.tgUserId,
+        "withdrawAddress",
+        1n,
+      );
+
+      expect(url).toEqual("http://hash");
+    });
+
+    it("should automatically create account for requestor when it does not exists", async () => {
+      when(Accounts.getAccountByTgUserId)
+        .calledWith(account1.tgUserId)
+        .mockResolvedValue(null);
+      when(Accounts.getAndIncrementLastSeedIndex)
+        .calledWith()
+        .mockResolvedValue(10);
+      when(Nano.getSecretKeyFromSeed)
+        .calledWith(expect.anything(), 11)
+        .mockReturnValue(account1KeyMetadata.secretKey);
+      when(Nano.extractAccountMetadata)
+        .calledWith(account1KeyMetadata.secretKey)
+        .mockReturnValue(account1KeyMetadata);
+      when(Nano.getBalance)
+        .calledWith(account1.address)
+        .mockResolvedValue({ balance: 0n, pending: 0n });
+
+      await expect(TipService.withdrawToAddress(
+        account1.tgUserId,
+        "withdrawAddress",
+        1n,
+      )).rejects.toThrowError(BusinessErrors.INSUFFICIENT_BALANCE);
+      expect(Accounts.saveAccount).toBeCalledWith({
+        ...account1,
+        seedIndex: 11,
+      });
+    });
+
+  });
+
   describe("listen on confirmed send blocks and generate receive blocks", () => {
     it("should generate receive blocks and emit onTopUp", async () => {
       const cb = jest.fn();

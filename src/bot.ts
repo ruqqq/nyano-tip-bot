@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { Bot, GrammyError, HttpError, NextFunction } from "grammy";
-import { NyanoTipBotContext } from "./context";
+import { Bot, GrammyError, HttpError, NextFunction, session } from "grammy";
+import { NyanoTipBotContext, NyanoTipBotSession } from "./context";
 import { BotService } from "./bot-service";
 import log from "loglevel";
 log.setDefaultLevel(process.env.LOG_LEVEL as any ?? "INFO");
@@ -16,10 +16,12 @@ function wrapNext(fn: (ctx: NyanoTipBotContext) => Promise<void>): (ctx: NyanoTi
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const bot = new Bot<NyanoTipBotContext>(process.env.BOT_TOKEN!);
 
+bot.use(session<NyanoTipBotSession, NyanoTipBotContext>({ initial: () => ({}) }));
 bot.use(BotService.usernameRecorderMiddleware);
 bot.use(BotService.startMenu);
+bot.use(BotService.withdrawMenu);
 bot.command("balance", BotService.handleBalanceCommand);
-bot.command("withdraw", BotService.withdrawBalance);
+bot.command("withdraw", BotService.handleWithdrawBalance);
 bot.command("tip", BotService.handleMessage);
 bot.on("message", wrapNext(BotService.handleMessage));
 bot.command("start", BotService.handleStartCommand);

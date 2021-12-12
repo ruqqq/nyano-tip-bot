@@ -1,5 +1,5 @@
 import { Bot, NextFunction } from "grammy";
-import { convert, Unit } from "nanocurrency";
+import { convert, Unit, checkAddress } from "nanocurrency";
 import { NyanoTipBotContext } from "./context";
 import { BusinessErrors } from "./errors";
 import { TipService } from "./tip-service";
@@ -215,7 +215,7 @@ async function handleBalanceCommand(ctx: NyanoTipBotContext): Promise<void> {
   })
 }
 
-async function withdrawBalance(ctx: NyanoTipBotContext): Promise<void> {
+async function handleWithdrawBalance(ctx: NyanoTipBotContext): Promise<void> {
   if (!ctx.from) {
     return;
   }
@@ -228,7 +228,42 @@ async function withdrawBalance(ctx: NyanoTipBotContext): Promise<void> {
     return;
   }
 
-  await ctx.reply("We are still building this feature. Please try again later.");
+  if (!ctx.match) {
+    await ctx.reply("Please provide a valid amount and address to withdraw to.")
+    return;
+  }
+
+  const inputs = (ctx.match as string).match(/(^[0-9]+(\.[0-9]+)?){1}\s(.+)/);
+  if (!inputs || inputs.length < 4) {
+    await ctx.reply("Please provide a valid amount and address to withdraw to.")
+    return;
+  }
+
+  const amountString = inputs[1];
+  const toAddress = inputs[3];
+
+  if (!checkAddress(toAddress)) {
+    await ctx.reply("Please provide a valid amount and address to withdraw to.")
+    return;
+  }
+
+  ctx.session.withdrawalSession = {
+    fromUserId: `${ctx.from.id}`,
+    toAddress: toAddress,
+    amount: amountString,
+  }
+
+  await ctx.reply(
+    `Please confirm that the address and amount below is correct\\.
+Sending your nano to the wrong address will not be reversible\\!
+
+Withdraw to\\: **${toAddress.replace(/_/g, "\\_")}**
+Amount\\: **${amountString.replace(/\./g, "\\.")} nyano**`,
+    {
+      parse_mode: "MarkdownV2",
+      reply_markup: withdrawMenu,
+    }
+  );
 }
 
 async function handleStartCommand(ctx: NyanoTipBotContext) {
@@ -316,9 +351,9 @@ You can view your NyanoTipBot wallet on a block explorer website\\.
 Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-chain and you can view the transaction in the block explorer too\\.
 `;
 
-const startMenu: Menu = new Menu("start-menu")
+const startMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("start-menu")
   .submenu("Withdraw to personal wallet",  "submenu-with-back", (ctx) =>
-    ctx.editMessageText("")
+    ctx.editMessageText("You can withdraw to your own wallet by using the command /withdraw <value> <nano address>")
   )
   .row()
   .submenu("Track your tips journey",  "info-ledger-menu", (ctx) =>
@@ -330,15 +365,15 @@ const startMenu: Menu = new Menu("start-menu")
   )
   .row()
   .url("1 NANO = x SGD?", "https://www.coingecko.com/en/coins/nano/sgd");
-const submenuWithBack: Menu = new Menu("submenu-with-back")
+const submenuWithBack: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("submenu-with-back")
   .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
-const infoLedgerMenu: Menu = new Menu("info-ledger-menu")
+const infoLedgerMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-ledger-menu")
   .dynamic(async (ctx, range) => {
     return range
       .url("My Account on Block Explorer", await getBlockExplorerUrl(ctx)).row()
       .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
   });
-const accountBalanceMenu: Menu = new Menu("account-balance-menu")
+const accountBalanceMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("account-balance-menu")
   .dynamic(async (ctx, range) => {
     return range
       .url("Top-up my tipping wallet", await getTopupUrl(ctx)).row()
@@ -349,12 +384,48 @@ startMenu.register(submenuWithBack);
 startMenu.register(infoLedgerMenu);
 startMenu.register(accountBalanceMenu);
 
+const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("withdraw-menu")
+  .text({ text: "Confirm" }, async (ctx) => {
+    if (!ctx.session.withdrawalSession) {
+      await ctx.editMessageText("Unable to process request. Please try again later.");
+      return;
+    }
+
+    const {
+      fromUserId,
+      toAddress,
+      amount: amountString,
+    } = ctx.session.withdrawalSession;
+
+    const amount = BigInt(convert(amountString, { from: Unit.nano, to: Unit.raw }));
+
+    await ctx.editMessageText(`Performing withdrawal to ${toAddress}...`);
+    await TipService.withdrawToAddress(fromUserId, toAddress, amount);
+    ctx.session.withdrawalSession = undefined;
+    await ctx.editMessageText(`Withdrawn ${amountString} nyano to ${toAddress}!`);
+  })
+  .text("Cancel", async (ctx) => {
+    if (!ctx.session.withdrawalSession) {
+      await ctx.editMessageText("Unable to process request. Please try again later.");
+      return;
+    }
+
+    const {
+      toAddress,
+      amount: amountString,
+    } = ctx.session.withdrawalSession;
+
+    await ctx.editMessageText(`Cancelled withdrawal of ${amountString} nyano to ${toAddress}.`);
+    ctx.session.withdrawalSession = undefined;
+  });
+
 export const BotService = {
   usernameRecorderMiddleware,
   handleMessage,
   handleBalanceCommand,
   handleStartCommand,
-  withdrawBalance,
+  handleWithdrawBalance,
   sendMessageOnTopUp,
   startMenu,
+  withdrawMenu,
 };

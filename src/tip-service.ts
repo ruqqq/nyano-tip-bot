@@ -45,6 +45,31 @@ async function tipUser(
   return Nano.getBlockExplorerUrl(block.hash);
 }
 
+async function withdrawToAddress(
+  fromTgUserId: string,
+  toNanoAddress: string,
+  amount: bigint,
+) {
+  const fromAccount = await getOrCreateAccount(fromTgUserId);
+
+  const { balance: fromBalance } = await Nano.getBalance(fromAccount.address);
+  if (fromBalance - amount < 0n) {
+    throw BusinessErrors.INSUFFICIENT_BALANCE;
+  }
+
+  const fromKeyMetadata = Nano.extractAccountMetadata(
+    Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, fromAccount.seedIndex),
+  );
+
+  const { block } = await Nano.send(
+    fromKeyMetadata.secretKey,
+    toNanoAddress,
+    amount,
+  );
+
+  return Nano.getBlockExplorerUrl(block.hash);
+}
+
 async function getAccount(tgUserId: string) {
   return await getOrCreateAccount(tgUserId);
 }
@@ -116,6 +141,7 @@ function subscribeToOnReceiveBalance(cb: {
 
 export const TipService = {
   tipUser,
+  withdrawToAddress,
   getAccount,
   getBalance,
   getLinkForTopUp,
