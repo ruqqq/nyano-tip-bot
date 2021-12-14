@@ -31,6 +31,12 @@ describe("TipService", () => {
     address: account2.address,
   };
 
+  beforeEach(() => {
+    when(Nano.processPendingBlocks)
+      .calledWith(expect.anything())
+      .mockResolvedValue([]);
+  });
+
   afterEach(resetAllWhenMocks);
 
   describe("get user account", () => {

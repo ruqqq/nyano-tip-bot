@@ -1,5 +1,5 @@
 
-import { BlocksInfoResponseContents, NanoClient } from '@dev-ptera/nano-node-rpc';
+import { AccountInfoResponse, NanoClient } from '@dev-ptera/nano-node-rpc';
 import AwaitLock from 'await-lock';
 import {
   derivePublicKey,
@@ -41,26 +41,33 @@ async function receive(
   amount: bigint,
 ) {
   const { address, publicKey } = extractAccountMetadata(secretKey);
-  const previous = await getAccountFrontier(address);
+  let accountInfo: AccountInfoResponse | null = null;
+  try {
+    accountInfo = await client.account_info(address, { representative: true });
+  } catch (e) {
+    if ((e as Error).message.indexOf("Account not found") < 0) {
+      throw e;
+    }
+  }
+
   let representative = "";
-  if (previous) {
-    const { blocks } = await client.blocks_info([previous], { json_block: true });
-    representative = (blocks[previous].contents as BlocksInfoResponseContents).representative;
+  if (accountInfo && accountInfo.representative) {
+    representative = accountInfo.representative;
   }
   if (!representative) {
     representative = await getMostRecentOnlineRepresentative();
   }
-  const balanceResponse = await client.account_balance(address);
+  const balance = accountInfo?.balance ?? "0";
   const receiveBlockData: CommonBlockData & (OpenBlockData | ReceiveBlockData) = {
     work: null,
-    balance: (BigInt(balanceResponse.balance) + amount).toString(),
+    balance: (BigInt(balance) + amount).toString(),
     representative,
-    previous,
+    previous: accountInfo?.frontier ?? null,
     link: fromBlock,
   };
 
   const block = createBlock(secretKey, receiveBlockData);
-  const workResult = await generateWork(previous ?? publicKey, "fffffe0000000000");
+  const workResult = await generateWork(accountInfo?.frontier ?? publicKey, "fffffe0000000000");
   block.block.work = workResult.work;
   const sendResult = await processBlock(block.block, block.block.previous ? 'receive' : 'open');
 
@@ -78,16 +85,13 @@ async function send(
   amount: bigint,
 ) {
   const { address } = extractAccountMetadata(secretKey);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const previous = (await getAccountFrontier(address))!;
-  const { blocks } = await client.blocks_info([previous], { json_block: true });
-  const representative = (blocks[previous].contents as BlocksInfoResponseContents).representative;
-  const balanceResponse = await client.account_balance(address);
+  const accountInfo = await client.account_info(address, { representative: true });
   const sendBlockData: CommonBlockData & SendBlockData = {
     work: null,
-    balance: (BigInt(balanceResponse.balance) - amount).toString(),
-    representative,
-    previous,
+    balance: (BigInt(accountInfo.balance) - amount).toString(),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    representative: accountInfo.representative!,
+    previous: accountInfo.frontier,
     link: toAddress,
   };
 
@@ -199,15 +203,6 @@ async function workGenerate(hash: string, difficulty?: string): Promise<{
     ...(difficulty ? { difficulty } : {}),
   });
   return response;
-}
-
-async function getAccountFrontier(address: string) {
-  const result = await client.accounts_frontiers([address]);
-  if (result.frontiers[address]) {
-    return result.frontiers[address];
-  }
-
-  return null;
 }
 
 async function processBlock(block: BlockRepresentation, subtype: 'send' | 'receive' | 'open') {

@@ -53,7 +53,8 @@ async function tipUser(
     const toKeyMetadata = Nano.extractAccountMetadata(
       Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, toAccount.seedIndex),
     );
-    Nano.processPendingBlocks(toKeyMetadata.secretKey);
+    Nano.processPendingBlocks(toKeyMetadata.secretKey)
+    .catch(log.error);
 
     return Nano.getBlockExplorerUrl(block.hash);
   } finally {
@@ -98,10 +99,13 @@ async function getAccount(tgUserId: string) {
 
 async function getBalance(tgUserId: string): Promise<{balance: bigint, pending: bigint}> {
   const account = await getOrCreateAccount(tgUserId);
+
   const { secretKey } = Nano.extractAccountMetadata(
     Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, account.seedIndex)
   );
-  Nano.processPendingBlocks(secretKey);
+  Nano.processPendingBlocks(secretKey)
+  .catch(log.error);
+
   return await Nano.getBalance(account.address);
 }
 
