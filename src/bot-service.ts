@@ -1,4 +1,4 @@
-import { Bot, NextFunction } from "grammy";
+import { Bot, BotError, GrammyError, HttpError, NextFunction } from "grammy";
 import { convert, Unit, checkAddress } from "nanocurrency";
 import { NyanoTipBotContext } from "./context";
 import { BusinessErrors } from "./errors";
@@ -93,46 +93,56 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
     const amount = BigInt(convert(amountString, { from: Unit.nano, to: Unit.raw }));
 
     log.info(`${fromId} sending tip to ${toId}`);
+    const replyToMessageId = ctx.update.message.message_id;
 
-    try {
-      const msg = await ctx.reply(`Sending **${amountString.replace(/\./, "\\.")}** nyano to [${to.first_name}](tg://user?id=${to.id})\\.\\.\\.`, {
-        parse_mode: "MarkdownV2",
-        reply_to_message_id: ctx.update.message.message_id,
-      });
-      const url = await TipService.tipUser(fromId, toId, amount);
-      await ctx.api.editMessageText(
-        msg.chat.id,
-        msg.message_id,
-        `**[${amountString.replace(/\./, "\\.")}](${url})** nyano sent to [${
-          to.first_name
-        }](tg://user?id=${to.id})\\!`,
-        {
-          parse_mode: "MarkdownV2",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "What's this?",
-                  url: `https://t.me/${ctx.me.username}?start`,
-                },
-              ],
-            ],
-          },
+    new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          const msg = await ctx.reply(`Sending **${amountString.replace(/\./, "\\.")}** nyano to [${to.first_name}](tg://user?id=${to.id})\\.\\.\\.`, {
+            parse_mode: "MarkdownV2",
+            reply_to_message_id: replyToMessageId,
+          });
+          const url = await TipService.tipUser(fromId, toId, amount);
+          await ctx.api.editMessageText(
+            msg.chat.id,
+            msg.message_id,
+            `**[${amountString.replace(/\./, "\\.")}](${url})** nyano sent to [${
+              to.first_name
+            }](tg://user?id=${to.id})\\!`,
+            {
+              parse_mode: "MarkdownV2",
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: "What's this?",
+                      url: `https://t.me/${ctx.me.username}?start`,
+                    },
+                  ],
+                ],
+              },
+            }
+          );
+          resolve(undefined);
+        } catch (e) {
+          if (e === BusinessErrors.INSUFFICIENT_BALANCE) {
+            await ctx.reply("Insufficient balance\\. Please top\\-up and try again\\.", {
+              parse_mode: "MarkdownV2",
+              reply_to_message_id: replyToMessageId,
+              reply_markup: {
+                inline_keyboard: [[{ text: "Top-up", url: `https://t.me/${ctx.me.username}?start=topup` }]],
+              },
+            });
+          } else {
+            reject(e);
+          }
         }
-      );
-    } catch (e) {
-      if (e === BusinessErrors.INSUFFICIENT_BALANCE) {
-        await ctx.reply("Insufficient balance\\. Please top\\-up and try again\\.", {
-          parse_mode: "MarkdownV2",
-          reply_to_message_id: ctx.update.message.message_id,
-          reply_markup: {
-            inline_keyboard: [[{ text: "Top-up", url: `https://t.me/${ctx.me.username}?start=topup` }]],
-          },
-        });
-      } else {
-        throw e;
-      }
-    }
+      })();
+    })
+    .catch(err => {
+      const wrappedError = new BotError<NyanoTipBotContext>(err, ctx);
+      handleError(wrappedError);
+    });
   }
 }
 
@@ -287,6 +297,25 @@ async function handleStartCommand(ctx: NyanoTipBotContext) {
   }
 }
 
+async function handleError(err: BotError<NyanoTipBotContext>) {
+  const ctx = err.ctx;
+  log.error(`Error while handling update ${ctx.update.update_id}:`);
+  const e = err.error;
+  if (e instanceof GrammyError) {
+    log.error("Error in request:", e.description);
+  } else if (e instanceof HttpError) {
+    log.error("Could not contact Telegram:", e);
+  } else {
+    log.error("Unknown error:", e);
+  }
+  await ctx.reply(
+    "A technical error occurred while processing your request. Please try again later.",
+    {
+      reply_to_message_id: ctx.update.message?.message_id,
+    }
+  )
+}
+
 function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
   TipService.subscribeToOnReceiveBalance({
     onTip: async (fromTgUserId, toTgUserId) => {
@@ -399,10 +428,23 @@ const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("wit
 
     const amount = BigInt(convert(amountString, { from: Unit.nano, to: Unit.raw }));
 
-    await ctx.editMessageText(`Performing withdrawal to ${toAddress}...`);
-    await TipService.withdrawToAddress(fromUserId, toAddress, amount);
-    ctx.session.withdrawalSession = undefined;
-    await ctx.editMessageText(`Withdrawn ${amountString} nyano to ${toAddress}!`);
+    new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          await ctx.editMessageText(`Performing withdrawal to ${toAddress}...`);
+          await TipService.withdrawToAddress(fromUserId, toAddress, amount);
+          ctx.session.withdrawalSession = undefined;
+          await ctx.editMessageText(`Withdrawn ${amountString} nyano to ${toAddress}!`);
+          resolve(undefined);
+        } catch (e) {
+          reject(e);
+        }
+      })();
+    })
+    .catch(err => {
+      const wrappedError = new BotError<NyanoTipBotContext>(err, ctx);
+      handleError(wrappedError);
+    });
   })
   .text("Cancel", async (ctx) => {
     if (!ctx.session.withdrawalSession) {
@@ -425,6 +467,7 @@ export const BotService = {
   handleBalanceCommand,
   handleStartCommand,
   handleWithdrawBalance,
+  handleError,
   sendMessageOnTopUp,
   startMenu,
   withdrawMenu,

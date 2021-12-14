@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { Bot, GrammyError, HttpError, NextFunction, session } from "grammy";
+import { Bot, NextFunction, session } from "grammy";
 import { NyanoTipBotContext, NyanoTipBotSession } from "./context";
 import { BotService } from "./bot-service";
 import log from "loglevel";
@@ -28,23 +28,6 @@ bot.command("start", BotService.handleStartCommand);
 
 BotService.sendMessageOnTopUp(bot);
 
-bot.catch(async (err) => {
-  const ctx = err.ctx;
-  log.error(`Error while handling update ${ctx.update.update_id}:`);
-  const e = err.error;
-  if (e instanceof GrammyError) {
-    log.error("Error in request:", e.description);
-  } else if (e instanceof HttpError) {
-    log.error("Could not contact Telegram:", e);
-  } else {
-    log.error("Unknown error:", e);
-  }
-  await ctx.reply(
-    "A technical error occurred while processing your request. Please try again later.",
-    {
-      reply_to_message_id: ctx.update.message?.message_id,
-    }
-  )
-});
+bot.catch(BotService.handleError);
 
 bot.start();

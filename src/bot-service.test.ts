@@ -312,6 +312,7 @@ describe("BotService", () => {
         })
       );
       await BotService.handleMessage(ctx);
+      await new Promise(r => setTimeout(r, 0));
 
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
@@ -358,6 +359,7 @@ describe("BotService", () => {
         })
       );
       await BotService.handleMessage(ctx);
+      await new Promise(r => setTimeout(r, 0));
 
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
@@ -404,6 +406,7 @@ describe("BotService", () => {
         })
       );
       await BotService.handleMessage(ctx);
+      await new Promise(r => setTimeout(r, 0));
 
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
@@ -450,6 +453,7 @@ describe("BotService", () => {
         })
       );
       await BotService.handleMessage(ctx);
+      await new Promise(r => setTimeout(r, 0));
 
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
@@ -501,6 +505,7 @@ describe("BotService", () => {
         })
       );
       await BotService.handleMessage(ctx);
+      await new Promise(r => setTimeout(r, 0));
 
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
@@ -561,6 +566,7 @@ describe("BotService", () => {
           status: "member",
         });
       await BotService.handleMessage(ctx);
+      await new Promise(r => setTimeout(r, 0));
 
       expect(ctx.api.editMessageText).toHaveBeenCalledWith(
         expect.anything(),
@@ -606,6 +612,7 @@ describe("BotService", () => {
         })
       );
       await BotService.handleMessage(ctx);
+      await new Promise(r => setTimeout(r, 0));
 
       expect(ctx.reply).toHaveBeenCalledWith(
         "Insufficient balance\\. Please top\\-up and try again\\.",

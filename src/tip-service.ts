@@ -2,11 +2,21 @@ import { Account, Accounts } from "./accounts";
 import { BusinessErrors } from "./errors";
 import { Nano } from "./nano";
 import log from "loglevel";
+import AwaitLock from "await-lock";
 
 const NANO_WALLET_SEED = process.env.NANO_WALLET_SEED as string;
 if (!NANO_WALLET_SEED) {
   generateAndPrintSeed();
   throw Error(`NANO_WALLET_SEED cannot be empty.`);
+}
+
+const txLock: { [address: string]: AwaitLock } = {};
+
+async function acquireTxLock(address: string) {
+  if (!txLock[address]) {
+    txLock[address] = new AwaitLock();
+  }
+  await txLock[address].acquireAsync();
 }
 
 async function generateAndPrintSeed() {
@@ -22,27 +32,33 @@ async function tipUser(
   const fromAccount = await getOrCreateAccount(fromTgUserId);
   const toAccount = await getOrCreateAccount(toTgUserId);
 
-  const { balance: fromBalance } = await Nano.getBalance(fromAccount.address);
-  if (fromBalance - amount < 0n) {
-    throw BusinessErrors.INSUFFICIENT_BALANCE;
+  await acquireTxLock(fromAccount.address);
+
+  try {
+    const { balance: fromBalance } = await Nano.getBalance(fromAccount.address);
+    if (fromBalance - amount < 0n) {
+      throw BusinessErrors.INSUFFICIENT_BALANCE;
+    }
+
+    const fromKeyMetadata = Nano.extractAccountMetadata(
+      Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, fromAccount.seedIndex),
+    );
+
+    const { block } = await Nano.send(
+      fromKeyMetadata.secretKey,
+      toAccount.address,
+      amount,
+    );
+
+    const toKeyMetadata = Nano.extractAccountMetadata(
+      Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, toAccount.seedIndex),
+    );
+    Nano.processPendingBlocks(toKeyMetadata.secretKey);
+
+    return Nano.getBlockExplorerUrl(block.hash);
+  } finally {
+    txLock[fromAccount.address].release();
   }
-
-  const fromKeyMetadata = Nano.extractAccountMetadata(
-    Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, fromAccount.seedIndex),
-  );
-
-  const { block } = await Nano.send(
-    fromKeyMetadata.secretKey,
-    toAccount.address,
-    amount,
-  );
-
-  const toKeyMetadata = Nano.extractAccountMetadata(
-    Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, toAccount.seedIndex),
-  );
-  Nano.processPendingBlocks(toKeyMetadata.secretKey);
-
-  return Nano.getBlockExplorerUrl(block.hash);
 }
 
 async function withdrawToAddress(
@@ -52,22 +68,28 @@ async function withdrawToAddress(
 ) {
   const fromAccount = await getOrCreateAccount(fromTgUserId);
 
-  const { balance: fromBalance } = await Nano.getBalance(fromAccount.address);
-  if (fromBalance - amount < 0n) {
-    throw BusinessErrors.INSUFFICIENT_BALANCE;
+  await acquireTxLock(fromAccount.address);
+
+  try {
+    const { balance: fromBalance } = await Nano.getBalance(fromAccount.address);
+    if (fromBalance - amount < 0n) {
+      throw BusinessErrors.INSUFFICIENT_BALANCE;
+    }
+
+    const fromKeyMetadata = Nano.extractAccountMetadata(
+      Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, fromAccount.seedIndex),
+    );
+
+    const { block } = await Nano.send(
+      fromKeyMetadata.secretKey,
+      toNanoAddress,
+      amount,
+    );
+
+    return Nano.getBlockExplorerUrl(block.hash);
+  } finally {
+    txLock[fromAccount.address].release();
   }
-
-  const fromKeyMetadata = Nano.extractAccountMetadata(
-    Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, fromAccount.seedIndex),
-  );
-
-  const { block } = await Nano.send(
-    fromKeyMetadata.secretKey,
-    toNanoAddress,
-    amount,
-  );
-
-  return Nano.getBlockExplorerUrl(block.hash);
 }
 
 async function getAccount(tgUserId: string) {
