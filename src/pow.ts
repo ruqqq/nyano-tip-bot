@@ -33,7 +33,7 @@ async function generateAndCacheWork(hash: string) {
     if (!existingWork) {
       const workResult = await workGenerate(hash);
       await WorkCache.put(hash, workResult);
-      log.info("Cached work for:", hash, workResult);
+      log.info("Cached work for:", hash, workResult.work);
     }
   } catch (e) {
     log.warn("generateAndCacheWork failed:", e);
@@ -88,11 +88,12 @@ async function cpuWorkGenerate(
   hash: string,
   difficulty = "fffffff800000000",
 ): Promise<WorkGenerateReturn> {
-  log.info("work_generate:", hash, difficulty);
+  log.info("CPU work_generate:", hash, difficulty);
   const work = await computeWork(hash, {
     workerCount: 4,
     ...(difficulty ? { workThreshold: difficulty } : {}),
   });
+  log.info("CPU work_generate result:", hash, work);
   return {
     hash,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -107,12 +108,13 @@ async function rpcWorkGenerate(
   hash: string,
   difficulty = "fffffff800000000",
 ): Promise<WorkGenerateReturn> {
-  log.info("work_generate:", hash, difficulty);
+  log.info("RPC work_generate:", hash, difficulty, client.nodeAddress);
   const response = await client._send('work_generate', {
     json_block: 'true',
     hash,
     ...(difficulty ? { difficulty } : {}),
   });
+  log.info("RPC work_generate result:", response);
   return response;
 }
 
