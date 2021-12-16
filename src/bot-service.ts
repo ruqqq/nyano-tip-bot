@@ -225,6 +225,8 @@ async function handleBalanceCommand(ctx: NyanoTipBotContext): Promise<void> {
   })
 }
 
+const INVALID_WITHDRAW_COMMAND = "Please provide a valid amount and address to withdraw to. Example: /withdraw 100 nano_3gisuhb6fhda965d6p8wu4mfenrducg4thhmh7bd9gxwt8a1oijiuy4pscip";
+
 async function handleWithdrawBalance(ctx: NyanoTipBotContext): Promise<void> {
   if (!ctx.from) {
     return;
@@ -239,13 +241,13 @@ async function handleWithdrawBalance(ctx: NyanoTipBotContext): Promise<void> {
   }
 
   if (!ctx.match) {
-    await ctx.reply("Please provide a valid amount and address to withdraw to.")
+    await ctx.reply(INVALID_WITHDRAW_COMMAND)
     return;
   }
 
   const inputs = (ctx.match as string).match(/(^[0-9]+(\.[0-9]+)?){1}\s(.+)/);
   if (!inputs || inputs.length < 4) {
-    await ctx.reply("Please provide a valid amount and address to withdraw to.")
+    await ctx.reply(INVALID_WITHDRAW_COMMAND)
     return;
   }
 
@@ -253,7 +255,7 @@ async function handleWithdrawBalance(ctx: NyanoTipBotContext): Promise<void> {
   const toAddress = inputs[3];
 
   if (!checkAddress(toAddress)) {
-    await ctx.reply("Please provide a valid amount and address to withdraw to.")
+    await ctx.reply(INVALID_WITHDRAW_COMMAND)
     return;
   }
 
