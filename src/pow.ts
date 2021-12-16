@@ -16,10 +16,17 @@ const workGenClients = workGenNodeUrls.map((url, index) => {
   })
 });
 
-const workGenLock: AwaitLock = new AwaitLock();
+const workGenLocks: Record<string, AwaitLock> = {};
+
+async function acquireWorkGenLock(hash: string) {
+  if (!workGenLocks[hash]) {
+    workGenLocks[hash] = new AwaitLock();
+  }
+  await workGenLocks[hash].acquireAsync();
+}
 
 async function generateAndCacheWork(hash: string) {
-  await workGenLock.acquireAsync();
+  await acquireWorkGenLock(hash);
 
   try {
     const existingWork = await WorkCache.get(hash);
@@ -31,12 +38,12 @@ async function generateAndCacheWork(hash: string) {
   } catch (e) {
     log.warn("generateAndCacheWork failed:", e);
   } finally {
-    workGenLock.release();
+    workGenLocks[hash].release();
   }
 }
 
 async function generateWork(hash: string, difficulty?: string) {
-  await workGenLock.acquireAsync();
+  await acquireWorkGenLock(hash);
 
   try {
     const cached = await WorkCache.get(hash);
@@ -44,7 +51,7 @@ async function generateWork(hash: string, difficulty?: string) {
       return cached;
     }
   } finally {
-    workGenLock.release();
+    workGenLocks[hash].release();
   }
 
   return await workGenerate(hash, difficulty);
