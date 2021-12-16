@@ -6,3 +6,5 @@ jest.mock("./src/db", () => {
     ),
   }
 });
+
+jest.mock("./src/pow")

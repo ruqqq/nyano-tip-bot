@@ -16,7 +16,7 @@ import {
 import ReconnectingWebSocket from "reconnecting-websocket";
 import WS from "ws";
 import log from "loglevel";
-import { WorkCache } from './work-cache';
+import { Pow } from './pow';
 
 const client = new NanoClient({
   url: process.env.NANO_NODE_URL,
@@ -67,11 +67,11 @@ async function receive(
   };
 
   const block = createBlock(secretKey, receiveBlockData);
-  const workResult = await generateWork(accountInfo?.frontier ?? publicKey, "fffffe0000000000");
+  const workResult = await Pow.generateWork(accountInfo?.frontier ?? publicKey, "fffffe0000000000");
   block.block.work = workResult.work;
   const sendResult = await processBlock(block.block, block.block.previous ? 'receive' : 'open');
 
-  generateAndCacheWork(block.hash);
+  Pow.generateAndCacheWork(block.hash).catch(log.error);
 
   return {
     block,
@@ -96,35 +96,16 @@ async function send(
   };
 
   const block = createBlock(secretKey, sendBlockData);
-  const workResult = await generateWork(block.block.previous);
+  const workResult = await Pow.generateWork(block.block.previous);
   block.block.work = workResult.work;
   const sendResult = await processBlock(block.block, 'send');
 
-  generateAndCacheWork(block.hash);
+  Pow.generateAndCacheWork(block.hash).catch(log.error);
 
   return {
     block,
     sendResult,
   };
-}
-
-const workGenLock: AwaitLock = new AwaitLock();
-
-async function generateAndCacheWork(hash: string) {
-  await workGenLock.acquireAsync();
-
-  try {
-    const existingWork = await WorkCache.get(hash);
-    if (!existingWork) {
-      const workResult = await workGenerate(hash);
-      await WorkCache.put(hash, workResult);
-      log.info("Cached work for:", hash, workResult);
-    }
-  } catch (e) {
-    log.warn("generateAndCacheWork failed:", e);
-  } finally {
-    workGenLock.release();
-  }
 }
 
 function extractAccountMetadata(secretKey: string) {
@@ -173,36 +154,6 @@ async function processPendingBlocks(secretKey: string) {
   } finally {
     processPendingBlocksLocks[address].release();
   }
-}
-
-async function generateWork(hash: string, difficulty?: string) {
-  await workGenLock.acquireAsync();
-
-  try {
-    const cached = await WorkCache.get(hash);
-    if (cached) {
-      return cached;
-    }
-  } finally {
-    workGenLock.release();
-  }
-
-  return await workGenerate(hash, difficulty);
-}
-
-async function workGenerate(hash: string, difficulty?: string): Promise<{
-  hash: string;
-  work: string;
-  difficulty: string;
-  multiplier: string;
-}> {
-  log.info("work_generate:", hash, difficulty);
-  const response = await client._send('work_generate', {
-    json_block: 'true',
-    hash,
-    ...(difficulty ? { difficulty } : {}),
-  });
-  return response;
 }
 
 async function processBlock(block: BlockRepresentation, subtype: 'send' | 'receive' | 'open') {
