@@ -71,7 +71,9 @@ async function workGenerate(
   const workGenerators = workGenClients
     .map(client => (hash: string, difficulty?: string) => rpcWorkGenerate(client, hash, difficulty));
   workGenerators.sort(() => Math.random() - 0.5);
-  workGenerators.push(cpuWorkGenerate);
+  if (process.env.DISABLE_CPU_WORK_GEN !== "true") {
+    workGenerators.push(cpuWorkGenerate);
+  }
 
   for (const workGen of workGenerators) {
     try {
