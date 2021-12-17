@@ -25,6 +25,7 @@ bot.command("withdraw", BotService.handleWithdrawBalance);
 bot.command("tip", BotService.handleMessage);
 bot.on("message", wrapNext(BotService.handleMessage));
 bot.command("start", BotService.handleStartCommand);
+bot.command("help", BotService.handleStartCommand);
 
 BotService.sendMessageOnTopUp(bot);
 

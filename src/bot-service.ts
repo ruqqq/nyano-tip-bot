@@ -290,7 +290,7 @@ async function handleStartCommand(ctx: NyanoTipBotContext) {
     return;
   }
 
-  log.info(`${ctx.from.id} requested /start`);
+  log.info(`${ctx.from.id} requested ${ctx.message?.text}`);
 
   if (!ctx.match) {
     await ctx.reply(startText, { parse_mode: "MarkdownV2", reply_markup: startMenu });
