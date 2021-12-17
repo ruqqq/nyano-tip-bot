@@ -45,7 +45,8 @@ async function receive(
   try {
     accountInfo = await client.account_info(address, { representative: true });
   } catch (e) {
-    if ((e as Error).message.indexOf("Account not found") < 0) {
+    const error = e as Error;
+    if (!error.message || error.message.indexOf("Account not found") < 0) {
       throw e;
     }
   }
