@@ -398,7 +398,9 @@ const startMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("start-
   .url("1 NANO = x SGD?", "https://www.coingecko.com/en/coins/nano/sgd");
 const infoWithdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-withdraw-menu")
   .url("Natrium wallet app","https://natrium.io")
+  .row()
   .url("How to setup wallet", "https://www.youtube.com/watch?v=D0dpUB0O6pk")
+  .row()
   .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
 const infoLedgerMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-ledger-menu")
   .dynamic(async (ctx, range) => {
@@ -420,7 +422,11 @@ startMenu.register(accountBalanceMenu);
 const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("withdraw-menu")
   .text({ text: "Confirm" }, async (ctx) => {
     if (!ctx.session.withdrawalSession) {
-      await ctx.editMessageText("Unable to process request. Please try again later.");
+      await ctx.reply("Unable to process request. Please try again later.",{
+        reply_to_message_id: ctx.message?.message_id,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      await ctx.editMessageText(ctx.message!.text!);
       return;
     }
 
@@ -457,7 +463,11 @@ const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("wit
   })
   .text("Cancel", async (ctx) => {
     if (!ctx.session.withdrawalSession) {
-      await ctx.editMessageText("Unable to process request. Please try again later.");
+      await ctx.reply("Unable to process request. Please try again later.",{
+        reply_to_message_id: ctx.message?.message_id,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      await ctx.editMessageText(ctx.message!.text!);
       return;
     }
 
@@ -466,7 +476,7 @@ const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("wit
       amount: amountString,
     } = ctx.session.withdrawalSession;
 
-    await ctx.editMessageText(`Cancelled withdrawal of ${amountString} nyano to ${toAddress}.`);
+    await ctx.editMessageText(`Cancelled withdrawal of ${amountString} nyano to **${toAddress}**.`);
     ctx.session.withdrawalSession = undefined;
   });
 
