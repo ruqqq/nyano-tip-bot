@@ -202,6 +202,21 @@ async function generateBalanceMessage(ctx: NyanoTipBotContext): Promise<string> 
   return `Balance: ${balanceFormatted} nyano (${balanceFormattedNano} NANO)\nPending: ${pendingFormatted} nyano (${pendingFormattedNano} NANO)\n\nAddress: ${account.address}`;
 }
 
+async function getNanoAddress(ctx: NyanoTipBotContext): Promise<string> {
+  if (!ctx.from) {
+    throw new Error("From not found in context");
+  }
+  if (ctx.from.is_bot) {
+    throw new Error("Trying to generate topup url for a bot");
+  }
+
+  const from = ctx.from;
+  const fromId = `${from.id}`;
+  const account = await TipService.getAccount(fromId);
+
+  return account.address;
+}
+
 async function handleBalanceCommand(ctx: NyanoTipBotContext): Promise<void> {
   if (!ctx.from) {
     return;
@@ -408,15 +423,39 @@ const infoLedgerMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("i
       .url("My Account on Block Explorer", await getBlockExplorerUrl(ctx)).row()
       .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
   });
+const infoFaucetMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-faucet-menu")
+  .url("Free Nyano Faucet", "https://freenyanofaucet.com")
+  .row()
+  .url("Nano Faucet", "https://nano-faucet.org")
+  .row()
+  .url("Free Nano Faucet", "https://freenanofaucet.com")
+  .row()
+  .url("Nano Drop", "https://nanodrop.io")
+  .row()
+  .url("Prussia Faucet", "https://faucet.prussia.dev/nano")
+  .row()
+  .url("WeNano", "https://wenano.net")
+  .row()
+  .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
 const accountBalanceMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("account-balance-menu")
   .dynamic(async (ctx, range) => {
     return range
-      .url("Top-up my tipping wallet", await getTopupUrl(ctx)).row()
-      .url("My Account on Block Explorer", await getBlockExplorerUrl(ctx)).row()
-      .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
+      .submenu("Get free NANO / nyano", "info-faucet-menu", async (ctx) => {
+        const address = await getNanoAddress(ctx);
+        await ctx.editMessageText(`You can get free NANOs or nyanos through a faucet. Just paste this address into the faucet pages:\n\n${address}`);
+      })
+      .row()
+      .url("Top-up my tipping wallet", await getTopupUrl(ctx))
+      .row()
+      .url("My Account on Block Explorer", await getBlockExplorerUrl(ctx))
+      .row()
+      .back("Back", (ctx) =>
+        ctx.editMessageText(startText, { parse_mode: "MarkdownV2" })
+      );
   });
 startMenu.register(infoWithdrawMenu);
 startMenu.register(infoLedgerMenu);
+startMenu.register(infoFaucetMenu);
 startMenu.register(accountBalanceMenu);
 
 const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("withdraw-menu")
