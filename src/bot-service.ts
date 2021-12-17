@@ -432,6 +432,8 @@ const infoFaucetMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("i
   .row()
   .url("Nano Drop", "https://nanodrop.io")
   .row()
+  .url("Nanocafe Faucet", "https://nanocafe.cc/faucet")
+  .row()
   .url("Prussia Faucet", "https://faucet.prussia.dev/nano")
   .row()
   .url("WeNano", "https://wenano.net")
