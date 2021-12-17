@@ -383,7 +383,7 @@ Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-
 `;
 
 const startMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("start-menu")
-  .submenu("Withdraw to personal wallet",  "submenu-with-back", (ctx) =>
+  .submenu("Withdraw to personal wallet",  "info-withdraw-menu", (ctx) =>
     ctx.editMessageText("You can withdraw to your own wallet by using the command /withdraw <value> <nano address>")
   )
   .row()
@@ -396,7 +396,9 @@ const startMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("start-
   )
   .row()
   .url("1 NANO = x SGD?", "https://www.coingecko.com/en/coins/nano/sgd");
-const submenuWithBack: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("submenu-with-back")
+const infoWithdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-withdraw-menu")
+  .url("Natrium wallet app","https://natrium.io")
+  .url("How to setup wallet", "https://www.youtube.com/watch?v=D0dpUB0O6pk")
   .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
 const infoLedgerMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-ledger-menu")
   .dynamic(async (ctx, range) => {
@@ -411,7 +413,7 @@ const accountBalanceMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext
       .url("My Account on Block Explorer", await getBlockExplorerUrl(ctx)).row()
       .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
   });
-startMenu.register(submenuWithBack);
+startMenu.register(infoWithdrawMenu);
 startMenu.register(infoLedgerMenu);
 startMenu.register(accountBalanceMenu);
 
@@ -434,9 +436,14 @@ const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("wit
       (async () => {
         try {
           await ctx.editMessageText(`Performing withdrawal to ${toAddress}...`);
-          await TipService.withdrawToAddress(fromUserId, toAddress, amount);
+          const url = await TipService.withdrawToAddress(fromUserId, toAddress, amount);
           ctx.session.withdrawalSession = undefined;
-          await ctx.editMessageText(`Withdrawn ${amountString} nyano to ${toAddress}!`);
+          await ctx.editMessageText(
+            `Withdrawn **[${amountString.replace(/\./, "\\.")}](${url})** nyano to ${toAddress.replace(/_/g, "\\_")}\\!`,
+            {
+              parse_mode: "MarkdownV2",
+            },
+          );
           resolve(undefined);
         } catch (e) {
           reject(e);
