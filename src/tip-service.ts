@@ -152,6 +152,7 @@ function subscribeToOnReceiveBalance(cb: {
         );
         const results = await Nano.processPendingBlocks(secretKey);
         results.forEach(result => log.info("Received:", Nano.getBlockExplorerUrl(result.block.hash)))
+        await new Promise(r => setTimeout(r, 2000));
         if (sendingAccount) {
           cb.onTip(sendingAccount.tgUserId, receivingAccount.tgUserId);
         } else {
