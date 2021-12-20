@@ -457,7 +457,7 @@ const accountBalanceMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext
   });
 startMenu.register(infoWithdrawMenu);
 startMenu.register(infoLedgerMenu);
-startMenu.register(infoFaucetMenu);
+accountBalanceMenu.register(infoFaucetMenu);
 startMenu.register(accountBalanceMenu);
 
 const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("withdraw-menu")
