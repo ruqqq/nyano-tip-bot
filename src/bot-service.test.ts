@@ -73,7 +73,7 @@ describe("BotService", () => {
       await BotService.handleStartCommand(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 10 nyano (0.00001 NANO)\nPending: 0 nyano (0 NANO)\n\nAddress: nanoAddress",
+        "Balance: 10 nyano (0.00001 NANO)\nPending: 0 nyano (0 NANO)\n\nIt may take a few moments for your balance to be updated after you have done your top-up.\n\nAddress: nanoAddress",
         {
           reply_markup: expect.anything(),
         }
@@ -666,7 +666,7 @@ describe("BotService", () => {
       await BotService.handleBalanceCommand(ctx);
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        "Balance: 10 nyano (0.00001 NANO)\nPending: 0 nyano (0 NANO)\n\nAddress: nanoAddress",
+        "Balance: 10 nyano (0.00001 NANO)\nPending: 0 nyano (0 NANO)\n\nIt may take a few moments for your balance to be updated after you have done your top-up.\n\nAddress: nanoAddress",
         {
           reply_markup: expect.anything(),
         }

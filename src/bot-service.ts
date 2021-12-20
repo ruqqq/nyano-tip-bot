@@ -199,7 +199,7 @@ async function generateBalanceMessage(ctx: NyanoTipBotContext): Promise<string> 
     to: Unit.NANO,
   });
 
-  return `Balance: ${balanceFormatted} nyano (${balanceFormattedNano} NANO)\nPending: ${pendingFormatted} nyano (${pendingFormattedNano} NANO)\n\nAddress: ${account.address}`;
+  return `Balance: ${balanceFormatted} nyano (${balanceFormattedNano} NANO)\nPending: ${pendingFormatted} nyano (${pendingFormattedNano} NANO)\n\nIt may take a few moments for your balance to be updated after you have done your top-up.\n\nAddress: ${account.address}`;
 }
 
 async function getNanoAddress(ctx: NyanoTipBotContext): Promise<string> {
