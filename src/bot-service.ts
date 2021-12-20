@@ -386,7 +386,7 @@ Ways to tip users\\:
 3\\. Reply or tag user and include \\"\\!tip \\<value\\>\\" anywhere in your message
 
 Note\\:
-\\- The value is in Nyano \\(1 nyano \\= 0\\.000001 nano\\)
+\\- The value is in [Nyano](https://www.reddit.com/r/nyano/) \\(1 nyano \\= 0\\.000001 nano\\)
 \\- If you do not specify the value\\, it will default to tip 10 Nyano
 
 Have fun tipping\\!`;
