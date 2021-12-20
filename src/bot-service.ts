@@ -399,7 +399,7 @@ Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-
 
 const startMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("start-menu")
   .submenu("Withdraw to personal wallet",  "info-withdraw-menu", (ctx) =>
-    ctx.editMessageText("You can withdraw to your own wallet by using the command /withdraw <value> <nano address>")
+    ctx.editMessageText("You can withdraw to your own wallet by using the command /withdraw <value> <nano address>\n\nYou can use the withdrawn NANO to buy other cryptos or convert to fiat on exchanges (e.g. crypto.com).")
   )
   .row()
   .submenu("Track your tips journey",  "info-ledger-menu", (ctx) =>
@@ -415,6 +415,8 @@ const infoWithdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>(
   .url("Natrium wallet app","https://natrium.io")
   .row()
   .url("How to setup wallet", "https://www.youtube.com/watch?v=D0dpUB0O6pk")
+  .row()
+  .url("Crypto.com Exchange", "https://crypto.com/app/vacq39tsgq")
   .row()
   .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
 const infoLedgerMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-ledger-menu")
