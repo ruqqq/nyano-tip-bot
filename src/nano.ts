@@ -214,7 +214,7 @@ function subscribeToConfirmations(cb: (hash: string, block: BlockRepresentationW
 
     if (data_json.topic === "confirmation" && (data_json.message.block.subtype === "send" || data_json.message.block.subtype === "receive")) {
       if (data_json.message.block.subtype === "receive") {
-        getBlock(data_json.message.block.link)
+        getBlock(data_json.message.hash)
         .then(block => {
           if (block && block.source_account) {
             return cb(data_json.message.hash, data_json.message.block, block.source_account);
