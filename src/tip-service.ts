@@ -3,6 +3,7 @@ import { BusinessErrors } from "./errors";
 import { Nano } from "./nano";
 import log from "loglevel";
 import AwaitLock from "await-lock";
+import { BlockRepresentationWithSubtype } from "./types";
 
 const NANO_WALLET_SEED = process.env.NANO_WALLET_SEED as string;
 if (!NANO_WALLET_SEED) {
@@ -137,26 +138,107 @@ async function getOrCreateAccount(tgUserId: string): Promise<Account> {
   return account;
 }
 
-function subscribeToOnReceiveBalance(cb: {
+function subscribeToConfirmedTx(cb: {
   onTopUp: (tgUserId: string) => Promise<void>;
   onTip: (fromTgUserId: string, toTgUserId: string) => Promise<void>;
+  onWithdraw: (tgUserId: string) => Promise<void>;
 }) {
+
+  type TxStatus = "pending" | "confirmed";
+
+  function deduceTransactionDetails(
+    block: BlockRepresentationWithSubtype,
+    account1: Account | null,
+    account2: Account | null,
+  ): {
+    action: "tip",
+    status: TxStatus,
+    sendingAccount: Account,
+    receivingAccount: Account,
+  } | {
+    action: "withdraw",
+    status: TxStatus,
+    sendingAccount: Account,
+  } | {
+    action: "topup",
+    status: TxStatus,
+    receivingAccount: Account,
+  } | null {
+
+    if (block.subtype === "send" && account1 && account2) {
+      return {
+        action: "tip",
+        status: "pending",
+        sendingAccount: account1,
+        receivingAccount: account2,
+      }
+    } else if (block.subtype === "receive" && account1 && account2) {
+      return {
+        action: "tip",
+        status: "confirmed",
+        sendingAccount: account2,
+        receivingAccount: account1,
+      }
+    } else if (block.subtype === "send" && account1) {
+      return {
+        action: "withdraw",
+        status: "pending",
+        sendingAccount: account1,
+      }
+    } else if (block.subtype === "receive" && account2) {
+      return {
+        action: "withdraw",
+        status: "confirmed",
+        sendingAccount: account2,
+      }
+    } else if (block.subtype === "send" && account2) {
+      return {
+        action: "topup",
+        status: "pending",
+        receivingAccount: account2,
+      }
+    } else if (block.subtype === "receive" && account1) {
+      return {
+        action: "topup",
+        status: "confirmed",
+        receivingAccount: account1,
+      }
+    } else {
+      return null;
+    }
+  }
   Nano.subscribeToConfirmations(async (hash, block) => {
     try {
-      const sendingAccount = await Accounts.getAccountByAddress(block.account);
-      const receivingAccount = await Accounts.getAccountByAddress(block.link_as_account);
-      if (receivingAccount) {
-        log.info("Confirmed", Nano.getBlockExplorerUrl(hash));
+      const account1 = await Accounts.getAccountByAddress(block.account);
+      const account2 = await Accounts.getAccountByAddress(block.link_as_account);
+
+      const details = deduceTransactionDetails(block, account1, account2);
+      if (!details) {
+        return;
+      }
+      const {
+        action,
+        status,
+      } = details;
+
+      log.info("Block Confirmation:", Nano.getBlockExplorerUrl(hash));
+      log.info("Deduced Tx:", details);
+
+      if (status === "pending" && (action === "topup" || action === "tip")) {
         const { secretKey } = Nano.extractAccountMetadata(
-          Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, receivingAccount.seedIndex)
+          Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, details.receivingAccount.seedIndex)
         );
         const results = await Nano.processPendingBlocks(secretKey);
         results.forEach(result => log.info("Received:", Nano.getBlockExplorerUrl(result.block.hash)))
-        await new Promise(r => setTimeout(r, 2000));
-        if (sendingAccount) {
-          cb.onTip(sendingAccount.tgUserId, receivingAccount.tgUserId);
-        } else {
-          cb.onTopUp(receivingAccount.tgUserId);
+      } else if (status === "confirmed") {
+        if (action === "tip") {
+          cb.onTip(details.sendingAccount.tgUserId, details.receivingAccount.tgUserId);
+        } else if (action === "topup") {
+          cb.onTopUp(details.receivingAccount.tgUserId);
+        }
+      } else if (status === "pending") {
+        if (action === "withdraw") {
+          cb.onWithdraw(details.sendingAccount.tgUserId);
         }
       }
     } catch (e) {
@@ -172,5 +254,5 @@ export const TipService = {
   getBalance,
   getLinkForTopUp,
   getLinkForAccount,
-  subscribeToOnReceiveBalance,
+  subscribeToConfirmedTx,
 };

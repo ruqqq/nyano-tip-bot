@@ -306,12 +306,12 @@ describe("TipService", () => {
 
   });
 
-  describe("listen on confirmed send blocks and generate receive blocks", () => {
-    it("should generate receive blocks and emit onTopUp", async () => {
+  describe("listen on confirmed blocks", () => {
+    it("should generate receive blocks on top-up", async () => {
       const cb = jest.fn();
       const block = {
         type: "state",
-        account: account2.address,
+        account: "someAddress",
         previous:
           "7DA32EAEFA29A67F45BBCA61F75A6EF7F78155C49A39DA26AD57CE4AE57A2079",
         representative:
@@ -327,9 +327,6 @@ describe("TipService", () => {
       when(Accounts.getAccountByAddress)
         .calledWith(block.link_as_account)
         .mockResolvedValue(account1);
-      when(Accounts.getAccountByAddress)
-        .calledWith(block.account)
-        .mockResolvedValue(null);
       when(Nano.getSecretKeyFromSeed)
         .calledWith(expect.anything(), account1.seedIndex)
         .mockReturnValue(account1KeyMetadata.secretKey);
@@ -339,7 +336,37 @@ describe("TipService", () => {
       when(Nano.processPendingBlocks)
         .calledWith(account1KeyMetadata.secretKey)
         .mockResolvedValue([]);
-      TipService.subscribeToOnReceiveBalance({ onTip: cb, onTopUp: cb });
+      TipService.subscribeToConfirmedTx({ onTip: jest.fn(), onTopUp: cb, onWithdraw: jest.fn() });
+
+      await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
+        "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
+        block
+      );
+
+      expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account1KeyMetadata.secretKey);
+    });
+
+    it("should call onTopUp on confirmed receive blocks", async () => {
+      const cb = jest.fn();
+      const block = {
+        type: "state",
+        account: account1.address,
+        previous:
+          "7DA32EAEFA29A67F45BBCA61F75A6EF7F78155C49A39DA26AD57CE4AE57A2079",
+        representative:
+          "nano_1n747n7fgebsk93khx6fkrj9wmjkgho6zsmb1m7men39uz4pafmmimhob7y7",
+        balance: "11984000000000000000000000000",
+        link: "52F120D524A5B9870C894E1624813C551B89B5D3BBC2092360E615569D2B8E91",
+        link_as_account: "someAddress",
+        signature:
+          "707A4F6E54BACD9628948DAE9526591438CF54685642DF0594585865E43887F3D874055991E5E75D8F56B90E1ABD2F890A3FAE2A7B88C7DB3D9A14EFFF62920C",
+        work: "08c3cf84614bc310",
+        subtype: "receive",
+      };
+      when(Accounts.getAccountByAddress)
+        .calledWith(block.account)
+        .mockResolvedValue(account1);
+      TipService.subscribeToConfirmedTx({ onTip: jest.fn(), onTopUp: cb, onWithdraw: jest.fn() });
 
       await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
         "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
@@ -347,10 +374,9 @@ describe("TipService", () => {
       );
 
       expect(cb).toHaveBeenCalledWith(account1.tgUserId);
-      expect(cb).not.toHaveBeenCalledWith(account2.tgUserId, account1.tgUserId);
     });
 
-    it("should generate receive blocks onTip", async () => {
+    it("should generate receive blocks on tip", async () => {
       const cb = jest.fn();
       const block = {
         type: "state",
@@ -382,7 +408,40 @@ describe("TipService", () => {
       when(Nano.processPendingBlocks)
         .calledWith(account1KeyMetadata.secretKey)
         .mockResolvedValue([]);
-      TipService.subscribeToOnReceiveBalance({ onTip: cb, onTopUp: cb });
+      TipService.subscribeToConfirmedTx({ onTip: cb, onTopUp: jest.fn(), onWithdraw: jest.fn() });
+
+      await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
+        "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
+        block
+      );
+
+      expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account1KeyMetadata.secretKey);
+    });
+
+    it("should call onTip on confirmed tip", async () => {
+      const cb = jest.fn();
+      const block = {
+        type: "state",
+        account: account1.address,
+        previous:
+          "7DA32EAEFA29A67F45BBCA61F75A6EF7F78155C49A39DA26AD57CE4AE57A2079",
+        representative:
+          "nano_1n747n7fgebsk93khx6fkrj9wmjkgho6zsmb1m7men39uz4pafmmimhob7y7",
+        balance: "11984000000000000000000000000",
+        link: "52F120D524A5B9870C894E1624813C551B89B5D3BBC2092360E615569D2B8E91",
+        link_as_account: account2.address,
+        signature:
+          "707A4F6E54BACD9628948DAE9526591438CF54685642DF0594585865E43887F3D874055991E5E75D8F56B90E1ABD2F890A3FAE2A7B88C7DB3D9A14EFFF62920C",
+        work: "08c3cf84614bc310",
+        subtype: "receive",
+      };
+      when(Accounts.getAccountByAddress)
+        .calledWith(block.link_as_account)
+        .mockResolvedValue(account2);
+      when(Accounts.getAccountByAddress)
+        .calledWith(block.account)
+        .mockResolvedValue(account1);
+      TipService.subscribeToConfirmedTx({ onTip: cb, onTopUp: jest.fn(), onWithdraw: jest.fn() });
 
       await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
         "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
@@ -390,10 +449,39 @@ describe("TipService", () => {
       );
 
       expect(cb).toHaveBeenCalledWith(account2.tgUserId, account1.tgUserId);
-      expect(cb).not.toHaveBeenCalledWith(account1.tgUserId);
     });
 
-    it("should do nothing when receiving address is not in account records", async () => {
+    it("should call onWithdraw on confirmed send blocks", async () => {
+      const cb = jest.fn();
+      const block = {
+        type: "state",
+        account: account1.address,
+        previous:
+          "7DA32EAEFA29A67F45BBCA61F75A6EF7F78155C49A39DA26AD57CE4AE57A2079",
+        representative:
+          "nano_1n747n7fgebsk93khx6fkrj9wmjkgho6zsmb1m7men39uz4pafmmimhob7y7",
+        balance: "11984000000000000000000000000",
+        link: "52F120D524A5B9870C894E1624813C551B89B5D3BBC2092360E615569D2B8E91",
+        link_as_account: "someAddress",
+        signature:
+          "707A4F6E54BACD9628948DAE9526591438CF54685642DF0594585865E43887F3D874055991E5E75D8F56B90E1ABD2F890A3FAE2A7B88C7DB3D9A14EFFF62920C",
+        work: "08c3cf84614bc310",
+        subtype: "send",
+      };
+      when(Accounts.getAccountByAddress)
+        .calledWith(block.account)
+        .mockResolvedValue(account1);
+      TipService.subscribeToConfirmedTx({ onTip: jest.fn(), onTopUp: jest.fn(), onWithdraw: cb });
+
+      await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
+        "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
+        block
+      );
+
+      expect(cb).toHaveBeenCalledWith(account1.tgUserId);
+    });
+
+    it("should do nothing when sending and receiving address is not in account records", async () => {
       const cb = jest.fn();
       const block = {
         type: "state",
@@ -415,7 +503,7 @@ describe("TipService", () => {
       when(Accounts.getAccountByAddress)
         .calledWith(block.link_as_account)
         .mockResolvedValue(null);
-      TipService.subscribeToOnReceiveBalance({ onTip: cb, onTopUp: cb });
+      TipService.subscribeToConfirmedTx({ onTip: cb, onTopUp: cb, onWithdraw: cb });
 
       await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
         "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",

@@ -17,6 +17,7 @@ import ReconnectingWebSocket from "reconnecting-websocket";
 import WS from "ws";
 import log from "loglevel";
 import { Pow } from './pow';
+import { BlockRepresentationWithSubtype } from './types';
 
 const client = new NanoClient({
   url: process.env.NANO_NODE_URL,
@@ -175,7 +176,7 @@ async function getMostRecentOnlineRepresentative(): Promise<string> {
   return representatives[0];
 }
 
-function subscribeToConfirmations(cb: (hash: string, block: BlockRepresentation) => Promise<void>) {
+function subscribeToConfirmations(cb: (hash: string, block: BlockRepresentationWithSubtype) => Promise<void>) {
   if (!process.env.NANO_NODE_WS_URL) {
     throw new Error("NANO_NODE_WS_URL env not specified!");
   }
@@ -206,7 +207,7 @@ function subscribeToConfirmations(cb: (hash: string, block: BlockRepresentation)
   ws.addEventListener("message", (msg) => {
     const data_json = JSON.parse(msg.data);
 
-    if (data_json.topic === "confirmation" && data_json.message.block.subtype === "send") {
+    if (data_json.topic === "confirmation" && (data_json.message.block.subtype === "send" || data_json.message.block.subtype === "receive")) {
       cb(data_json.message.hash, data_json.message.block);
     }
   });
