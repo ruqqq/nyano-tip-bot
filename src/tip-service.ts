@@ -206,10 +206,10 @@ function subscribeToConfirmedTx(cb: {
       return null;
     }
   }
-  Nano.subscribeToConfirmations(async (hash, block) => {
+  Nano.subscribeToConfirmations(async (hash, block, linkedAccount) => {
     try {
       const account1 = await Accounts.getAccountByAddress(block.account);
-      const account2 = await Accounts.getAccountByAddress(block.link_as_account);
+      const account2 = await Accounts.getAccountByAddress(linkedAccount);
 
       const details = deduceTransactionDetails(block, account1, account2);
       if (!details) {

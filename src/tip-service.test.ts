@@ -325,7 +325,7 @@ describe("TipService", () => {
         subtype: "send",
       };
       when(Accounts.getAccountByAddress)
-        .calledWith(block.link_as_account)
+        .calledWith(account1.address)
         .mockResolvedValue(account1);
       when(Nano.getSecretKeyFromSeed)
         .calledWith(expect.anything(), account1.seedIndex)
@@ -340,7 +340,8 @@ describe("TipService", () => {
 
       await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
         "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
-        block
+        block,
+        account1.address,
       );
 
       expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account1KeyMetadata.secretKey);
@@ -395,7 +396,7 @@ describe("TipService", () => {
         subtype: "send",
       };
       when(Accounts.getAccountByAddress)
-        .calledWith(block.link_as_account)
+        .calledWith(account1.address)
         .mockResolvedValue(account1);
       when(Accounts.getAccountByAddress)
         .calledWith(block.account)
@@ -413,7 +414,8 @@ describe("TipService", () => {
 
       await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
         "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
-        block
+        block,
+        account1.address,
       );
 
       expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account1KeyMetadata.secretKey);
@@ -431,14 +433,14 @@ describe("TipService", () => {
           "nano_1n747n7fgebsk93khx6fkrj9wmjkgho6zsmb1m7men39uz4pafmmimhob7y7",
         balance: "11984000000000000000000000000",
         link: "52F120D524A5B9870C894E1624813C551B89B5D3BBC2092360E615569D2B8E91",
-        link_as_account: account2.address,
+        link_as_account: "",
         signature:
           "707A4F6E54BACD9628948DAE9526591438CF54685642DF0594585865E43887F3D874055991E5E75D8F56B90E1ABD2F890A3FAE2A7B88C7DB3D9A14EFFF62920C",
         work: "08c3cf84614bc310",
         subtype: "receive",
       };
       when(Accounts.getAccountByAddress)
-        .calledWith(block.link_as_account)
+        .calledWith(account2.address)
         .mockResolvedValue(account2);
       when(Accounts.getAccountByAddress)
         .calledWith(block.account)
@@ -447,7 +449,8 @@ describe("TipService", () => {
 
       await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
         "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
-        block
+        block,
+        account2.address,
       );
 
       expect(cb).toHaveBeenCalledWith(account2.tgUserId, account1.tgUserId, "confirmed");

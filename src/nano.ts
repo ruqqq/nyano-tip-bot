@@ -1,5 +1,5 @@
 
-import { AccountInfoResponse, NanoClient } from '@dev-ptera/nano-node-rpc';
+import { AccountInfoResponse, BlocksInfoResponse, NanoClient } from '@dev-ptera/nano-node-rpc';
 import AwaitLock from 'await-lock';
 import {
   derivePublicKey,
@@ -125,6 +125,11 @@ function getSecretKeyFromSeed(seed: string, index: number): string {
   return deriveSecretKey(seed, index);
 }
 
+async function getBlock(hash: string): Promise<BlocksInfoResponse["blocks"][0] | null> {
+  const results = await client.blocks_info([hash], { json_block: true, pending: true, balance: true, source: true })
+  return results.blocks[hash] ?? null;
+}
+
 function getBlockExplorerUrl(hash: string): string {
   return `https://nanocrawler.cc/explorer/block/${hash}`;
 }
@@ -176,7 +181,7 @@ async function getMostRecentOnlineRepresentative(): Promise<string> {
   return representatives[0];
 }
 
-function subscribeToConfirmations(cb: (hash: string, block: BlockRepresentationWithSubtype) => Promise<void>) {
+function subscribeToConfirmations(cb: (hash: string, block: BlockRepresentationWithSubtype, linkedAccount: string) => Promise<void>) {
   if (!process.env.NANO_NODE_WS_URL) {
     throw new Error("NANO_NODE_WS_URL env not specified!");
   }
@@ -208,7 +213,15 @@ function subscribeToConfirmations(cb: (hash: string, block: BlockRepresentationW
     const data_json = JSON.parse(msg.data);
 
     if (data_json.topic === "confirmation" && (data_json.message.block.subtype === "send" || data_json.message.block.subtype === "receive")) {
-      cb(data_json.message.hash, data_json.message.block);
+      getBlock(data_json.message.block.link)
+      .then(block => {
+        if (block && block.source_account) {
+          return cb(data_json.message.hash, data_json.message.block, block.source_account);
+        }
+
+        throw new Error(`Unable to find block (with source account) for id ${data_json.message.block.link}`);
+      })
+      .catch(log.error)
     }
   });
 
