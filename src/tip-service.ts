@@ -138,14 +138,13 @@ async function getOrCreateAccount(tgUserId: string): Promise<Account> {
   return account;
 }
 
+type TxStatus = "pending" | "confirmed";
+
 function subscribeToConfirmedTx(cb: {
-  onTopUp: (tgUserId: string) => Promise<void>;
-  onTip: (fromTgUserId: string, toTgUserId: string) => Promise<void>;
+  onTopUp: (tgUserId: string, status: TxStatus) => Promise<void>;
+  onTip: (fromTgUserId: string, toTgUserId: string, status: TxStatus) => Promise<void>;
   onWithdraw: (tgUserId: string) => Promise<void>;
 }) {
-
-  type TxStatus = "pending" | "confirmed";
-
   function deduceTransactionDetails(
     block: BlockRepresentationWithSubtype,
     account1: Account | null,
@@ -225,6 +224,12 @@ function subscribeToConfirmedTx(cb: {
       log.info("Deduced Tx:", details);
 
       if (status === "pending" && (action === "topup" || action === "tip")) {
+        if (action === "tip") {
+          cb.onTip(details.sendingAccount.tgUserId, details.receivingAccount.tgUserId, details.status);
+        } else if (action === "topup") {
+          cb.onTopUp(details.receivingAccount.tgUserId, details.status);
+        }
+
         const { secretKey } = Nano.extractAccountMetadata(
           Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, details.receivingAccount.seedIndex)
         );
@@ -232,9 +237,9 @@ function subscribeToConfirmedTx(cb: {
         results.forEach(result => log.info("Received:", Nano.getBlockExplorerUrl(result.block.hash)))
       } else if (status === "confirmed") {
         if (action === "tip") {
-          cb.onTip(details.sendingAccount.tgUserId, details.receivingAccount.tgUserId);
+          cb.onTip(details.sendingAccount.tgUserId, details.receivingAccount.tgUserId, details.status);
         } else if (action === "topup") {
-          cb.onTopUp(details.receivingAccount.tgUserId);
+          cb.onTopUp(details.receivingAccount.tgUserId, details.status);
         }
       } else if (status === "pending") {
         if (action === "withdraw") {

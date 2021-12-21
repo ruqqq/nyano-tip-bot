@@ -335,7 +335,11 @@ async function handleError(err: BotError<NyanoTipBotContext>) {
 
 function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
   TipService.subscribeToConfirmedTx({
-    onTip: async (fromTgUserId, toTgUserId) => {
+    onTip: async (fromTgUserId, toTgUserId, status) => {
+      if (status === "pending") {
+        return;
+      }
+
       const { balance, pending } = await TipService.getBalance(toTgUserId);
       const balanceFormatted = convert(balance.toString(), {
         from: Unit.raw,
@@ -355,7 +359,11 @@ function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
         log.warn(e);
       }
     },
-    onTopUp: async (tgUserId) => {
+    onTopUp: async (tgUserId, status) => {
+      if (status === "pending") {
+        return;
+      }
+
       const { balance, pending } = await TipService.getBalance(tgUserId);
       const balanceFormatted = convert(balance.toString(), {
         from: Unit.raw,

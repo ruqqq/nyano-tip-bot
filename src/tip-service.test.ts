@@ -344,6 +344,7 @@ describe("TipService", () => {
       );
 
       expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account1KeyMetadata.secretKey);
+      expect(cb).toHaveBeenCalledWith(account1.tgUserId, "pending");
     });
 
     it("should call onTopUp on confirmed receive blocks", async () => {
@@ -373,7 +374,7 @@ describe("TipService", () => {
         block
       );
 
-      expect(cb).toHaveBeenCalledWith(account1.tgUserId);
+      expect(cb).toHaveBeenCalledWith(account1.tgUserId, "confirmed");
     });
 
     it("should generate receive blocks on tip", async () => {
@@ -416,6 +417,7 @@ describe("TipService", () => {
       );
 
       expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account1KeyMetadata.secretKey);
+      expect(cb).toHaveBeenCalledWith(account2.tgUserId, account1.tgUserId, "pending");
     });
 
     it("should call onTip on confirmed tip", async () => {
@@ -448,7 +450,7 @@ describe("TipService", () => {
         block
       );
 
-      expect(cb).toHaveBeenCalledWith(account2.tgUserId, account1.tgUserId);
+      expect(cb).toHaveBeenCalledWith(account2.tgUserId, account1.tgUserId, "confirmed");
     });
 
     it("should call onWithdraw on confirmed send blocks", async () => {
