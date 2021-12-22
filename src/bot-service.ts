@@ -407,7 +407,20 @@ function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
       }
     },
     onWithdraw: async (id, tgUserId) => {
-      return;
+      try {
+        const pendingTx = await PendingTxService.get(id);
+        if (pendingTx) {
+          await bot.api.editMessageText(
+            pendingTx.chatId,
+            pendingTx.messageId,
+            pendingTx.text,
+            pendingTx.textParams,
+          );
+          await PendingTxService.del(id);
+        }
+      } catch (e) {
+        log.warn(e);
+      }
     },
   });
 }
@@ -524,14 +537,22 @@ const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("wit
       (async () => {
         try {
           await ctx.editMessageText(`Performing withdrawal to ${toAddress}...`);
-          const url = await TipService.withdrawToAddress(fromUserId, toAddress, amount);
+          const id = await TipService.withdrawToAddress(fromUserId, toAddress, amount);
           ctx.session.withdrawalSession = undefined;
-          await ctx.editMessageText(
-            `Withdrawn **[${amountString.replace(/\./, "\\.")}](${url})** nyano to ${toAddress.replace(/_/g, "\\_")}\\!`,
-            {
+          await PendingTxService.put(id, {
+            sendingTgUserId: fromUserId,
+            amount: amountString,
+            id,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            chatId: ctx.chat!.id,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            messageId: ctx.message!.message_id,
+            action: "withdraw",
+            text: `Withdrawn **[${amountString.replace(/\./, "\\.")}](${TipService.getLinkForBlock(id)})** nyano to ${toAddress.replace(/_/g, "\\_")}\\!`,
+            textParams: {
               parse_mode: "MarkdownV2",
             },
-          );
+          });
           resolve(undefined);
         } catch (e) {
           reject(e);

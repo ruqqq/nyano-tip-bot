@@ -82,7 +82,7 @@ async function withdrawToAddress(
       amount,
     );
 
-    return Nano.getBlockExplorerUrl(block.hash);
+    return block.hash;
   } finally {
     txLock[fromAccount.address].release();
   }

@@ -2,7 +2,9 @@ import { pendingTxDb } from "./db";
 import { NotFoundError } from "level-errors";
 import log from "loglevel";
 
-export interface PendingTx {
+export type PendingTx = PendingTipTx | PendingWithdrawTx;
+
+export interface PendingTipTx {
   sendingTgUserId: string;
   receivingTgUserId: string;
   amount: string;
@@ -13,6 +15,18 @@ export interface PendingTx {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   textParams?: any;
   action: "tip";
+}
+
+export interface PendingWithdrawTx {
+  sendingTgUserId: string;
+  amount: string;
+  id: string;
+  chatId: string | number;
+  messageId: number;
+  text: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  textParams?: any;
+  action: "withdraw";
 }
 
 async function put(

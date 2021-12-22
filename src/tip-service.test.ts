@@ -260,13 +260,13 @@ describe("TipService", () => {
         .calledWith(expect.anything())
         .mockImplementation((hash) => `http://${hash}`);
 
-      const url = await TipService.withdrawToAddress(
+      const id = await TipService.withdrawToAddress(
         account1.tgUserId,
         "withdrawAddress",
         1n,
       );
 
-      expect(url).toEqual("http://hash");
+      expect(id).toEqual("hash");
     });
 
     it("should automatically create account for requestor when it does not exists", async () => {
