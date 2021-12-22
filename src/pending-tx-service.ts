@@ -27,14 +27,16 @@ async function get(
   id: string
 ): Promise<PendingTx | null> {
   try {
+    log.info(`[PendingTxService] Getting ${id}...`);
     const tx = await pendingTxDb.get(id);
-    log.info(`[PendingTxService] Getting ${id}:`, tx);
+    log.info("[PendingTxService] Result:", tx);
     return tx;
   } catch (e) {
     if (!(e instanceof NotFoundError)) {
       throw e;
     }
 
+    log.info("[PendingTxService] Result: null");
     return null;
   }
 }
