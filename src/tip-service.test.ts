@@ -316,6 +316,7 @@ describe("TipService", () => {
           "707A4F6E54BACD9628948DAE9526591438CF54685642DF0594585865E43887F3D874055991E5E75D8F56B90E1ABD2F890A3FAE2A7B88C7DB3D9A14EFFF62920C",
         work: "08c3cf84614bc310",
         subtype: "send",
+        hash: "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
       };
       when(Accounts.getAccountByAddress)
         .calledWith(account1.address)
@@ -373,7 +374,7 @@ describe("TipService", () => {
       );
 
       expect(cb).toHaveBeenCalledWith(
-        "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
+        block.link,
         account1.tgUserId,
         "confirmed"
       );
@@ -395,6 +396,7 @@ describe("TipService", () => {
           "707A4F6E54BACD9628948DAE9526591438CF54685642DF0594585865E43887F3D874055991E5E75D8F56B90E1ABD2F890A3FAE2A7B88C7DB3D9A14EFFF62920C",
         work: "08c3cf84614bc310",
         subtype: "send",
+        hash: "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
       };
       when(Accounts.getAccountByAddress)
         .calledWith(account1.address)
@@ -460,7 +462,7 @@ describe("TipService", () => {
       );
 
       expect(cb).toHaveBeenCalledWith(
-        "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
+        block.link,
         account2.tgUserId,
         account1.tgUserId,
         "confirmed"
@@ -483,6 +485,7 @@ describe("TipService", () => {
           "707A4F6E54BACD9628948DAE9526591438CF54685642DF0594585865E43887F3D874055991E5E75D8F56B90E1ABD2F890A3FAE2A7B88C7DB3D9A14EFFF62920C",
         work: "08c3cf84614bc310",
         subtype: "send",
+        hash: "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
       };
       when(Accounts.getAccountByAddress)
         .calledWith(block.account)

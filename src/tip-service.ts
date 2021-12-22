@@ -232,6 +232,7 @@ function subscribeToConfirmedTx(cb: {
         return;
       }
       const {
+        id,
         action,
         status,
       } = details;
@@ -241,9 +242,9 @@ function subscribeToConfirmedTx(cb: {
 
       if (status === "pending" && (action === "topup" || action === "tip")) {
         if (action === "tip") {
-          cb.onTip(hash, details.sendingAccount.tgUserId, details.receivingAccount.tgUserId, details.status);
+          cb.onTip(id, details.sendingAccount.tgUserId, details.receivingAccount.tgUserId, details.status);
         } else if (action === "topup") {
-          cb.onTopUp(hash, details.receivingAccount.tgUserId, details.status);
+          cb.onTopUp(id, details.receivingAccount.tgUserId, details.status);
         }
 
         const { secretKey } = Nano.extractAccountMetadata(
@@ -253,13 +254,13 @@ function subscribeToConfirmedTx(cb: {
         results.forEach(result => log.info("Received:", Nano.getBlockExplorerUrl(result.block.hash)))
       } else if (status === "confirmed") {
         if (action === "tip") {
-          cb.onTip(hash, details.sendingAccount.tgUserId, details.receivingAccount.tgUserId, details.status);
+          cb.onTip(id, details.sendingAccount.tgUserId, details.receivingAccount.tgUserId, details.status);
         } else if (action === "topup") {
-          cb.onTopUp(hash, details.receivingAccount.tgUserId, details.status);
+          cb.onTopUp(id, details.receivingAccount.tgUserId, details.status);
         }
       } else if (status === "pending") {
         if (action === "withdraw") {
-          cb.onWithdraw(hash, details.sendingAccount.tgUserId);
+          cb.onWithdraw(id, details.sendingAccount.tgUserId);
         }
       }
     } catch (e) {
