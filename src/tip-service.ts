@@ -3,7 +3,7 @@ import { BusinessErrors } from "./errors";
 import { Nano } from "./nano";
 import log from "loglevel";
 import AwaitLock from "await-lock";
-import { BlockRepresentationWithSubtype } from "./types";
+import { ExtendedBlockRepresentation } from "./types";
 
 const NANO_WALLET_SEED = process.env.NANO_WALLET_SEED as string;
 if (!NANO_WALLET_SEED) {
@@ -51,12 +51,7 @@ async function tipUser(
       amount,
     );
 
-    const toKeyMetadata = Nano.extractAccountMetadata(
-      Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, toAccount.seedIndex),
-    );
-    await Nano.processPendingBlocks(toKeyMetadata.secretKey);
-
-    return Nano.getBlockExplorerUrl(block.hash);
+    return block.hash;
   } finally {
     txLock[fromAccount.address].release();
   }
@@ -97,6 +92,14 @@ async function getAccount(tgUserId: string) {
   return await getOrCreateAccount(tgUserId);
 }
 
+async function processPendingTxs(tgUserId: string) {
+  const account = await getOrCreateAccount(tgUserId);
+  const { secretKey } = Nano.extractAccountMetadata(
+    Nano.getSecretKeyFromSeed(NANO_WALLET_SEED, account.seedIndex)
+  );
+  return Nano.processPendingBlocks(secretKey);
+}
+
 async function getBalance(tgUserId: string): Promise<{balance: bigint, pending: bigint}> {
   const account = await getOrCreateAccount(tgUserId);
 
@@ -117,6 +120,10 @@ async function getLinkForTopUp(tgUserId: string): Promise<string> {
 async function getLinkForAccount(tgUserId: string): Promise<string> {
   const account = await getOrCreateAccount(tgUserId);
   return Nano.getAccountExplorerUrl(account.address);
+}
+
+function getLinkForBlock(hash: string): string {
+  return Nano.getBlockExplorerUrl(hash);
 }
 
 async function getOrCreateAccount(tgUserId: string): Promise<Account> {
@@ -141,12 +148,12 @@ async function getOrCreateAccount(tgUserId: string): Promise<Account> {
 type TxStatus = "pending" | "confirmed";
 
 function subscribeToConfirmedTx(cb: {
-  onTopUp: (tgUserId: string, status: TxStatus) => Promise<void>;
-  onTip: (fromTgUserId: string, toTgUserId: string, status: TxStatus) => Promise<void>;
-  onWithdraw: (tgUserId: string) => Promise<void>;
+  onTopUp: (id: string, tgUserId: string, status: TxStatus) => Promise<void>;
+  onTip: (id: string, fromTgUserId: string, toTgUserId: string, status: TxStatus) => Promise<void>;
+  onWithdraw: (id: string, tgUserId: string) => Promise<void>;
 }) {
   function deduceTransactionDetails(
-    block: BlockRepresentationWithSubtype,
+    block: ExtendedBlockRepresentation,
     account1: Account | null,
     account2: Account | null,
   ): {
@@ -154,14 +161,17 @@ function subscribeToConfirmedTx(cb: {
     status: TxStatus,
     sendingAccount: Account,
     receivingAccount: Account,
+    id: string,
   } | {
     action: "withdraw",
     status: TxStatus,
     sendingAccount: Account,
+    id: string,
   } | {
     action: "topup",
     status: TxStatus,
     receivingAccount: Account,
+    id: string,
   } | null {
 
     if (block.subtype === "send" && account1 && account2) {
@@ -170,6 +180,7 @@ function subscribeToConfirmedTx(cb: {
         status: "pending",
         sendingAccount: account1,
         receivingAccount: account2,
+        id: block.hash,
       }
     } else if (block.subtype === "receive" && account1 && account2) {
       return {
@@ -177,30 +188,35 @@ function subscribeToConfirmedTx(cb: {
         status: "confirmed",
         sendingAccount: account2,
         receivingAccount: account1,
+        id: block.link,
       }
     } else if (block.subtype === "send" && account1) {
       return {
         action: "withdraw",
         status: "pending",
         sendingAccount: account1,
+        id: block.hash,
       }
     } else if (block.subtype === "receive" && account2) {
       return {
         action: "withdraw",
         status: "confirmed",
         sendingAccount: account2,
+        id: block.link,
       }
     } else if (block.subtype === "send" && account2) {
       return {
         action: "topup",
         status: "pending",
         receivingAccount: account2,
+        id: block.hash,
       }
     } else if (block.subtype === "receive" && account1) {
       return {
         action: "topup",
         status: "confirmed",
         receivingAccount: account1,
+        id: block.link,
       }
     } else {
       return null;
@@ -225,9 +241,9 @@ function subscribeToConfirmedTx(cb: {
 
       if (status === "pending" && (action === "topup" || action === "tip")) {
         if (action === "tip") {
-          cb.onTip(details.sendingAccount.tgUserId, details.receivingAccount.tgUserId, details.status);
+          cb.onTip(hash, details.sendingAccount.tgUserId, details.receivingAccount.tgUserId, details.status);
         } else if (action === "topup") {
-          cb.onTopUp(details.receivingAccount.tgUserId, details.status);
+          cb.onTopUp(hash, details.receivingAccount.tgUserId, details.status);
         }
 
         const { secretKey } = Nano.extractAccountMetadata(
@@ -237,13 +253,13 @@ function subscribeToConfirmedTx(cb: {
         results.forEach(result => log.info("Received:", Nano.getBlockExplorerUrl(result.block.hash)))
       } else if (status === "confirmed") {
         if (action === "tip") {
-          cb.onTip(details.sendingAccount.tgUserId, details.receivingAccount.tgUserId, details.status);
+          cb.onTip(hash, details.sendingAccount.tgUserId, details.receivingAccount.tgUserId, details.status);
         } else if (action === "topup") {
-          cb.onTopUp(details.receivingAccount.tgUserId, details.status);
+          cb.onTopUp(hash, details.receivingAccount.tgUserId, details.status);
         }
       } else if (status === "pending") {
         if (action === "withdraw") {
-          cb.onWithdraw(details.sendingAccount.tgUserId);
+          cb.onWithdraw(hash, details.sendingAccount.tgUserId);
         }
       }
     } catch (e) {
@@ -259,5 +275,7 @@ export const TipService = {
   getBalance,
   getLinkForTopUp,
   getLinkForAccount,
+  getLinkForBlock,
   subscribeToConfirmedTx,
+  processPendingTxs,
 };

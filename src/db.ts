@@ -14,3 +14,8 @@ export const tgUsernameDb = level(
   process.env.WORK_CACHE_DB_FILE ?? "./tg-username-db",
   { valueEncoding: "json" },
 );
+
+export const pendingTxDb = level(
+  process.env.PENDING_TX_DB_FILE ?? "./pending-tx-db",
+  { valueEncoding: "json" },
+);

@@ -3,10 +3,12 @@ import { when } from "jest-when";
 import { BotService } from "./bot-service";
 import { NyanoTipBotContext } from "./context";
 import { BusinessErrors } from "./errors";
+import { PendingTxService } from "./pending-tx-service";
 import { TgUsernameMapperService } from "./tg-username-mapper-service";
 import { TipService } from "./tip-service";
 
 jest.mock("./tip-service");
+jest.mock("./pending-tx-service");
 jest.mock("./tg-username-mapper-service");
 jest.mock("@grammyjs/menu", () => {
   const menu: any = {
@@ -304,7 +306,10 @@ describe("BotService", () => {
         .mockResolvedValue({ balance: 100000000000000000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
-        .mockResolvedValue("http://block-url.com");
+        .mockResolvedValue("id");
+      when(TipService.getLinkForBlock)
+        .calledWith("id")
+        .mockReturnValue("http://block-url.com");
 
       const ctx = createContext(
         createTgUpdate({
@@ -314,23 +319,30 @@ describe("BotService", () => {
       await BotService.handleMessage(ctx);
       await new Promise(r => setTimeout(r, 0));
 
-      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        `**[100](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        {
-          parse_mode: "MarkdownV2",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "What's this?",
-                  url: `https://t.me/bot_username?start`,
-                },
+      expect(PendingTxService.put).toHaveBeenCalledWith(
+        "id",
+        expect.objectContaining({
+          sendingTgUserId: expect.anything(),
+          receivingTgUserId: expect.anything(),
+          amount: "100",
+          id: "id",
+          chatId: expect.anything(),
+          messageId: expect.anything(),
+          text: `**[100](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+          textParams: {
+            parse_mode: "MarkdownV2",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "What's this?",
+                    url: `https://t.me/bot_username?start`,
+                  },
+                ],
               ],
-            ],
-          },
-        }
+            },
+          }
+        }),
       );
     });
 
@@ -351,7 +363,11 @@ describe("BotService", () => {
         .mockResolvedValue({ balance: 10000000000000000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 10000000000000000000000000n)
-        .mockResolvedValue("http://block-url.com");
+        .mockResolvedValue("id");
+      when(TipService.getLinkForBlock)
+        .calledWith("id")
+        .mockReturnValue("http://block-url.com");
+
 
       const ctx = createContext(
         createTgUpdate({
@@ -361,23 +377,30 @@ describe("BotService", () => {
       await BotService.handleMessage(ctx);
       await new Promise(r => setTimeout(r, 0));
 
-      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        `**[10](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        {
-          parse_mode: "MarkdownV2",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "What's this?",
-                  url: `https://t.me/bot_username?start`,
-                },
+      expect(PendingTxService.put).toHaveBeenCalledWith(
+        "id",
+        expect.objectContaining({
+          sendingTgUserId: expect.anything(),
+          receivingTgUserId: expect.anything(),
+          amount: "10",
+          id: "id",
+          chatId: expect.anything(),
+          messageId: expect.anything(),
+          text: `**[10](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+          textParams: {
+            parse_mode: "MarkdownV2",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "What's this?",
+                    url: `https://t.me/bot_username?start`,
+                  },
+                ],
               ],
-            ],
-          },
-        }
+            },
+          }
+        }),
       );
     });
 
@@ -398,7 +421,10 @@ describe("BotService", () => {
         .mockResolvedValue({ balance: 10500000000000000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 10500000000000000000000000n)
-        .mockResolvedValue("http://block-url.com");
+        .mockResolvedValue("id");
+      when(TipService.getLinkForBlock)
+        .calledWith("id")
+        .mockReturnValue("http://block-url.com");
 
       const ctx = createContext(
         createTgUpdate({
@@ -408,23 +434,31 @@ describe("BotService", () => {
       await BotService.handleMessage(ctx);
       await new Promise(r => setTimeout(r, 0));
 
-      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        `**[10\\.5](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        {
-          parse_mode: "MarkdownV2",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "What's this?",
-                  url: `https://t.me/bot_username?start`,
-                },
+
+      expect(PendingTxService.put).toHaveBeenCalledWith(
+        "id",
+        expect.objectContaining({
+          sendingTgUserId: expect.anything(),
+          receivingTgUserId: expect.anything(),
+          amount: "10.5",
+          id: "id",
+          chatId: expect.anything(),
+          messageId: expect.anything(),
+          text: `**[10\\.5](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
+          textParams: {
+            parse_mode: "MarkdownV2",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "What's this?",
+                    url: `https://t.me/bot_username?start`,
+                  },
+                ],
               ],
-            ],
-          },
-        }
+            },
+          }
+        }),
       );
     });
 
@@ -445,7 +479,10 @@ describe("BotService", () => {
         .mockResolvedValue({ balance: 10000000000000000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 10000000000000000000000000n)
-        .mockResolvedValue("http://block-url.com");
+        .mockResolvedValue("id");
+      when(TipService.getLinkForBlock)
+        .calledWith("id")
+        .mockReturnValue("http://block-url.com");
 
       const ctx = createContext(
         createTgUpdate({
@@ -455,23 +492,30 @@ describe("BotService", () => {
       await BotService.handleMessage(ctx);
       await new Promise(r => setTimeout(r, 0));
 
-      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        `**[10](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-        {
-          parse_mode: "MarkdownV2",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "What's this?",
-                  url: `https://t.me/bot_username?start`,
-                },
+      expect(PendingTxService.put).toHaveBeenCalledWith(
+        "id",
+        expect.objectContaining({
+          sendingTgUserId: expect.anything(),
+          receivingTgUserId: expect.anything(),
+          amount: "10",
+          id: "id",
+          chatId: expect.anything(),
+          messageId: expect.anything(),
+          text: `**[10](http://block-url.com)** nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
+          textParams: {
+            parse_mode: "MarkdownV2",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "What's this?",
+                    url: `https://t.me/bot_username?start`,
+                  },
+                ],
               ],
-            ],
-          },
-        }
+            },
+          }
+        }),
       );
     });
 
@@ -497,7 +541,10 @@ describe("BotService", () => {
         .mockResolvedValue({ balance: 100000000000000000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
-        .mockResolvedValue("http://block-url.com");
+        .mockResolvedValue("id");
+      when(TipService.getLinkForBlock)
+        .calledWith("id")
+        .mockReturnValue("http://block-url.com");
 
       const ctx = createContext(
         createTgUpdate({
@@ -507,23 +554,30 @@ describe("BotService", () => {
       await BotService.handleMessage(ctx);
       await new Promise(r => setTimeout(r, 0));
 
-      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        `**[100](http://block-url.com)** nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
-        {
-          parse_mode: "MarkdownV2",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "What's this?",
-                  url: `https://t.me/bot_username?start`,
-                },
+      expect(PendingTxService.put).toHaveBeenCalledWith(
+        "id",
+        expect.objectContaining({
+          sendingTgUserId: expect.anything(),
+          receivingTgUserId: expect.anything(),
+          amount: "100",
+          id: "id",
+          chatId: expect.anything(),
+          messageId: expect.anything(),
+          text: `**[100](http://block-url.com)** nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
+          textParams: {
+            parse_mode: "MarkdownV2",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "What's this?",
+                    url: `https://t.me/bot_username?start`,
+                  },
+                ],
               ],
-            ],
-          },
-        }
+            },
+          }
+        }),
       );
     });
 
@@ -552,7 +606,10 @@ describe("BotService", () => {
         .mockResolvedValue({ balance: 100000000000000000000000000n, pending: 0n });
       when(TipService.tipUser)
         .calledWith(`${user1.id}`, `${user2.id}`, 100000000000000000000000000n)
-        .mockResolvedValue("http://block-url.com");
+        .mockResolvedValue("id");
+      when(TipService.getLinkForBlock)
+        .calledWith("id")
+        .mockReturnValue("http://block-url.com");
 
       const ctx = createContext(
         createTgUpdate({
@@ -568,23 +625,30 @@ describe("BotService", () => {
       await BotService.handleMessage(ctx);
       await new Promise(r => setTimeout(r, 0));
 
-      expect(ctx.api.editMessageText).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        `**[100](http://block-url.com)** nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
-        {
-          parse_mode: "MarkdownV2",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "What's this?",
-                  url: `https://t.me/bot_username?start`,
-                },
+      expect(PendingTxService.put).toHaveBeenCalledWith(
+        "id",
+        expect.objectContaining({
+          sendingTgUserId: expect.anything(),
+          receivingTgUserId: expect.anything(),
+          amount: "100",
+          id: "id",
+          chatId: expect.anything(),
+          messageId: expect.anything(),
+          text: `**[100](http://block-url.com)** nyano sent to [${user2.first_name}](tg://user?id=${user2.id})\\!`,
+          textParams: {
+            parse_mode: "MarkdownV2",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "What's this?",
+                    url: `https://t.me/bot_username?start`,
+                  },
+                ],
               ],
-            ],
-          },
-        }
+            },
+          }
+        }),
       );
     });
 

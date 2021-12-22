@@ -7,6 +7,7 @@ import log from "loglevel";
 import { User } from "@grammyjs/types";
 import { TgUsernameMapperService } from "./tg-username-mapper-service";
 import { Menu } from "@grammyjs/menu";
+import { PendingTxService } from "./pending-tx-service";
 
 async function usernameRecorderMiddleware(ctx: NyanoTipBotContext, next: NextFunction) {
   const from = ctx.update.message?.from;
@@ -102,14 +103,21 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
             parse_mode: "MarkdownV2",
             reply_to_message_id: replyToMessageId,
           });
-          const url = await TipService.tipUser(fromId, toId, amount);
-          await ctx.api.editMessageText(
-            msg.chat.id,
-            msg.message_id,
-            `**[${amountString.replace(/\./, "\\.")}](${url})** nyano sent to [${
-              to.first_name
-            }](tg://user?id=${to.id})\\!`,
-            {
+          const id = await TipService.tipUser(fromId, toId, amount);
+          await PendingTxService.put(id, {
+            sendingTgUserId: fromId,
+            receivingTgUserId: toId,
+            amount: amountString,
+            id,
+            chatId: msg.chat.id,
+            messageId: msg.message_id,
+            text: `**[${amountString.replace(
+              /\./,
+              "\\."
+            )}](${TipService.getLinkForBlock(id)})** nyano sent to [${to.first_name}](tg://user?id=${
+              to.id
+            })\\!`,
+            textParams: {
               parse_mode: "MarkdownV2",
               reply_markup: {
                 inline_keyboard: [
@@ -121,8 +129,9 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
                   ],
                 ],
               },
-            }
-          );
+            },
+            action: "tip",
+          });
           resolve(undefined);
         } catch (e) {
           if (e === BusinessErrors.INSUFFICIENT_BALANCE) {
@@ -335,7 +344,7 @@ async function handleError(err: BotError<NyanoTipBotContext>) {
 
 function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
   TipService.subscribeToConfirmedTx({
-    onTip: async (fromTgUserId, toTgUserId, status) => {
+    onTip: async (id, fromTgUserId, toTgUserId, status) => {
       if (status === "pending") {
         return;
       }
@@ -358,8 +367,22 @@ function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
       } catch (e) {
         log.warn(e);
       }
+      try {
+        const pendingTx = await PendingTxService.get(id);
+        if (pendingTx) {
+          await bot.api.editMessageText(
+            pendingTx.chatId,
+            pendingTx.messageId,
+            pendingTx.text,
+            pendingTx.textParams,
+          );
+          await PendingTxService.del(id);
+        }
+      } catch (e) {
+        log.warn(e);
+      }
     },
-    onTopUp: async (tgUserId, status) => {
+    onTopUp: async (id, tgUserId, status) => {
       if (status === "pending") {
         return;
       }
@@ -383,7 +406,7 @@ function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
         log.warn(e);
       }
     },
-    onWithdraw: async (tgUserId) => {
+    onWithdraw: async (id, tgUserId) => {
       return;
     },
   });
@@ -422,6 +445,7 @@ const startMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("start-
   )
   .row()
   .url("1 NANO = x SGD?", "https://www.coingecko.com/en/coins/nano/sgd");
+
 const infoWithdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-withdraw-menu")
   .url("Natrium wallet app","https://natrium.io")
   .row()
@@ -430,12 +454,14 @@ const infoWithdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>(
   .url("Crypto.com Exchange", "https://crypto.com/app/vacq39tsgq")
   .row()
   .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
+
 const infoLedgerMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-ledger-menu")
   .dynamic(async (ctx, range) => {
     return range
       .url("My Account on Block Explorer", await getBlockExplorerUrl(ctx)).row()
       .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
   });
+
 const infoFaucetMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-faucet-menu")
   .url("Free Nyano Faucet", "https://freenyanofaucet.com")
   .row()
@@ -452,6 +478,7 @@ const infoFaucetMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("i
   .url("WeNano", "https://wenano.net")
   .row()
   .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
+
 const accountBalanceMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("account-balance-menu")
   .dynamic(async (ctx, range) => {
     return range
@@ -468,6 +495,7 @@ const accountBalanceMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext
         ctx.editMessageText(startText, { parse_mode: "MarkdownV2" })
       );
   });
+
 startMenu.register(infoWithdrawMenu);
 startMenu.register(infoLedgerMenu);
 accountBalanceMenu.register(infoFaucetMenu);
