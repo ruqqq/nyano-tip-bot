@@ -1,5 +1,6 @@
 import { pendingTxDb } from "./db";
 import { NotFoundError } from "level-errors";
+import log from "loglevel";
 
 export interface PendingTx {
   sendingTgUserId: string;
@@ -18,6 +19,7 @@ async function put(
   id: string,
   value: PendingTx,
 ): Promise<void> {
+  log.info(`[PendingTxService] Putting ${id}:`, value);
   await pendingTxDb.put(id, value);
 }
 
@@ -25,7 +27,9 @@ async function get(
   id: string
 ): Promise<PendingTx | null> {
   try {
-    return await pendingTxDb.get(id);
+    const tx = await pendingTxDb.get(id);
+    log.info(`[PendingTxService] Getting ${id}:`, tx);
+    return tx;
   } catch (e) {
     if (!(e instanceof NotFoundError)) {
       throw e;
@@ -38,6 +42,7 @@ async function get(
 async function del(
   id: string
 ): Promise<void> {
+  log.info(`[PendingTxService] Deleting ${id}`);
   await pendingTxDb.del(id);
 }
 
