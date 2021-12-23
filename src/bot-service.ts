@@ -546,7 +546,7 @@ const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("wit
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             chatId: ctx.chat!.id,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            messageId: ctx.message!.message_id,
+            messageId: ctx.msg!.message_id,
             action: "withdraw",
             text: `Withdrawn **[${amountString.replace(/\./, "\\.")}](${TipService.getLinkForBlock(id)})** nyano to ${toAddress.replace(/_/g, "\\_")}\\!`,
             textParams: {
