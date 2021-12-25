@@ -222,9 +222,17 @@ function subscribeToConfirmedTx(cb: {
       return null;
     }
   }
-  Nano.subscribeToConfirmations(async (hash, block, linkedAccount) => {
+  Nano.subscribeToConfirmations(async (hash, block) => {
     try {
       const account1 = await Accounts.getAccountByAddress(block.account);
+      let linkedAccount = block.link_as_account;
+      if (block.subtype === "receive" && account1) {
+        const result = await Nano.getBlock(hash);
+        if (!result || !result.source_account) {
+          throw new Error(`Unable to find block (with source account) for id ${hash}`);
+        }
+        linkedAccount = result.source_account;
+      }
       const account2 = await Accounts.getAccountByAddress(linkedAccount);
 
       const details = deduceTransactionDetails(block, account1, account2);

@@ -1,5 +1,5 @@
 
-import { AccountInfoResponse, BlocksInfoResponse, NanoClient } from '@dev-ptera/nano-node-rpc';
+import { AccountInfoResponse, BlocksInfoResponse } from '@dev-ptera/nano-node-rpc';
 import AwaitLock from 'await-lock';
 import {
   derivePublicKey,
@@ -18,15 +18,7 @@ import WS from "ws";
 import log from "loglevel";
 import { Pow } from './pow';
 import { ExtendedBlockRepresentation } from './types';
-
-const client = new NanoClient({
-  url: process.env.NANO_NODE_URL,
-  requestHeaders: {
-    ...(process.env.NANO_NODE_API_KEY ? {
-      "Authorization": process.env.NANO_NODE_API_KEY,
-    } : {}),
-  }
-});
+import { nanoClient as client } from "./wrapped-nano-client";
 
 async function getBalance(address: string): Promise<{balance: bigint, pending: bigint}> {
   const result = await client.account_balance(address);
@@ -181,7 +173,7 @@ async function getMostRecentOnlineRepresentative(): Promise<string> {
   return representatives[0];
 }
 
-function subscribeToConfirmations(cb: (hash: string, block: ExtendedBlockRepresentation, linkedAccount: string) => Promise<void>) {
+function subscribeToConfirmations(cb: (hash: string, block: ExtendedBlockRepresentation) => Promise<void>) {
   if (!process.env.NANO_NODE_WS_URL) {
     throw new Error("NANO_NODE_WS_URL env not specified!");
   }
@@ -213,27 +205,10 @@ function subscribeToConfirmations(cb: (hash: string, block: ExtendedBlockReprese
     const data_json = JSON.parse(msg.data);
 
     if (data_json.topic === "confirmation" && (data_json.message.block.subtype === "send" || data_json.message.block.subtype === "receive")) {
-      if (data_json.message.block.subtype === "receive") {
-        getBlock(data_json.message.hash)
-        .then(block => {
-          if (block && block.source_account) {
-            return cb(
-              data_json.message.hash,
-              { ...data_json.message.block, hash: data_json.message.hash },
-              block.source_account
-            );
-          }
-
-          throw new Error(`Unable to find block (with source account) for id ${data_json.message.block.link}`);
-        })
-        .catch(log.error)
-      } else {
-        cb(
-          data_json.message.hash,
-          { ...data_json.message.block, hash: data_json.message.hash },
-          data_json.message.block.link_as_account
-        ).catch(log.error);
-      }
+      cb(
+        data_json.message.hash,
+        { ...data_json.message.block, hash: data_json.message.hash },
+      ).catch(log.error);
     }
   });
 
@@ -252,4 +227,5 @@ export const Nano = {
   generateSeed,
   processPendingBlocks,
   subscribeToConfirmations,
+  getBlock,
 };

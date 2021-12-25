@@ -15,6 +15,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.16.4",
     "@babel/preset-typescript": "^7.16.0",
+    "@types/debug": "^4.1.7",
     "@types/jest": "^27.0.3",
     "@types/jest-when": "^2.7.3",
     "@types/level": "^6.0.0",
@@ -39,6 +40,7 @@
     "@dev-ptera/nano-node-rpc": "^2.0.2",
     "@grammyjs/menu": "^1.0.1",
     "await-lock": "^2.1.0",
+    "debug": "^4.3.3",
     "dotenv": "^10.0.0",
     "grammy": "^1.4.2",
     "level": "^7.0.1",

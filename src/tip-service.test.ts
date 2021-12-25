@@ -335,7 +335,6 @@ describe("TipService", () => {
       await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
         "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
         block,
-        account1.address,
       );
 
       expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account1KeyMetadata.secretKey);
@@ -366,6 +365,12 @@ describe("TipService", () => {
       when(Accounts.getAccountByAddress)
         .calledWith(block.account)
         .mockResolvedValue(account1);
+      when(Nano.getBlock)
+        .calledWith("127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2")
+        .mockResolvedValue({
+          ...block,
+          source_account: account2.address,
+        } as any);
       TipService.subscribeToConfirmedTx({ onTip: jest.fn(), onTopUp: cb, onWithdraw: jest.fn() });
 
       await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
@@ -418,7 +423,6 @@ describe("TipService", () => {
       await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
         "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
         block,
-        account1.address,
       );
 
       expect(Nano.processPendingBlocks).toHaveBeenCalledWith(account1KeyMetadata.secretKey);
@@ -450,6 +454,12 @@ describe("TipService", () => {
       when(Accounts.getAccountByAddress)
         .calledWith(account2.address)
         .mockResolvedValue(account2);
+      when(Nano.getBlock)
+        .calledWith("127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2")
+        .mockResolvedValue({
+          ...block,
+          source_account: account2.address,
+        } as any);
       when(Accounts.getAccountByAddress)
         .calledWith(block.account)
         .mockResolvedValue(account1);
@@ -457,8 +467,7 @@ describe("TipService", () => {
 
       await(Nano.subscribeToConfirmations as jest.Mock).mock.calls[0][0](
         "127067B2C455402CE36A21A5BEF5F368791D0981E12C571CB1086BC0FF5E4BD2",
-        block,
-        account2.address,
+        block
       );
 
       expect(cb).toHaveBeenCalledWith(
