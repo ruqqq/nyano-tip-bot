@@ -208,7 +208,11 @@ async function generateBalanceMessage(ctx: NyanoTipBotContext): Promise<string> 
     to: Unit.NANO,
   });
 
-  return `Balance: ${balanceFormatted} nyano (${balanceFormattedNano} NANO)\nPending: ${pendingFormatted} nyano (${pendingFormattedNano} NANO)\n\nIt may take a few moments for your balance to be updated after you have done your top-up.\n\nAddress: ${account.address}`;
+  return `Balance: ${balanceFormatted} nyano (${balanceFormattedNano} NANO)\nPending: ${pendingFormatted} nyano (${pendingFormattedNano} NANO)
+
+It may take a few moments for your balance to be updated after you have done your top-up.
+
+You can top-up to your tipping account from your personal wallet (e.g. Natrium app) by sending to the tipping wallet address.`;
 }
 
 async function getNanoAddress(ctx: NyanoTipBotContext): Promise<string> {
@@ -453,24 +457,28 @@ Likewise\\, for every tip that happens\\, it is an actual Nano transaction on\\-
 `;
 
 const startMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("start-menu")
-  .submenu("Withdraw to personal wallet",  "info-withdraw-menu", (ctx) =>
-    ctx.editMessageText("You can withdraw to your own wallet by using the command /withdraw <value> <nano address>\n\nYou can use the withdrawn NANO to buy other cryptos or convert to fiat on exchanges (e.g. crypto.com).")
+  .submenu("Get free nyanos", "info-faucet-menu", async (ctx) => {
+    await ctx.editMessageText("You can get free nyanos through a faucet. Follow the instructions:");
+  })
+  .row()
+  .submenu("View account balance / Top-up", "account-balance-menu", async (ctx) =>
+    ctx.editMessageText(await generateBalanceMessage(ctx))
   )
   .row()
   .submenu("Track your tips journey",  "info-ledger-menu", (ctx) =>
     ctx.editMessageText(infoLedgerText, { parse_mode: "MarkdownV2" })
   )
   .row()
-  .submenu("View account balance", "account-balance-menu", async (ctx) =>
-    ctx.editMessageText(await generateBalanceMessage(ctx))
+  .submenu("Withdraw to personal wallet",  "info-withdraw-menu", (ctx) =>
+    ctx.editMessageText("You can withdraw to your own wallet by using the command /withdraw <value> <nano address>\n\nYou can use the withdrawn NANO to buy other cryptos or convert to fiat on exchanges (e.g. crypto.com).")
   )
   .row()
   .url("1 NANO = x SGD?", "https://www.coingecko.com/en/coins/nano/sgd");
 
 const infoWithdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-withdraw-menu")
-  .url("Natrium wallet app","https://natrium.io")
+  .url("How to setup Natrium", "https://www.youtube.com/watch?v=D0dpUB0O6pk")
   .row()
-  .url("How to setup wallet", "https://www.youtube.com/watch?v=D0dpUB0O6pk")
+  .url("Download Natrium (wallet app)","https://natrium.io")
   .row()
   .url("Crypto.com Exchange", "https://crypto.com/app/vacq39tsgq")
   .row()
@@ -484,31 +492,30 @@ const infoLedgerMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("i
   });
 
 const infoFaucetMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("info-faucet-menu")
-  .url("Free Nyano Faucet", "https://freenyanofaucet.com")
+  .text("Step 1: Get and copy tipping wallet address", async (ctx) => {
+    const address = await getNanoAddress(ctx);
+    await ctx.reply(address);
+  })
   .row()
-  .url("Nano Faucet", "https://nano-faucet.org")
+  .url("Step 2: Paste to Free Nyano Faucet", "https://freenyanofaucet.com")
   .row()
-  .url("Free Nano Faucet", "https://freenanofaucet.com")
-  .row()
-  .url("Nano Drop", "https://nanodrop.io")
-  .row()
-  .url("Nanocafe Faucet", "https://nanocafe.cc/faucet")
-  .row()
-  .url("Prussia Faucet", "https://faucet.prussia.dev/nano")
-  .row()
-  .url("WeNano", "https://wenano.net")
+  .url("Step 3: Discover other faucets", "https://nanolooker.com/faucets")
   .row()
   .back("Back", (ctx) => ctx.editMessageText(startText, { parse_mode: "MarkdownV2" }));
 
 const accountBalanceMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("account-balance-menu")
   .dynamic(async (ctx, range) => {
     return range
-      .submenu("Get free NANO / nyano", "info-faucet-menu", async (ctx) => {
-        const address = await getNanoAddress(ctx);
-        await ctx.editMessageText(`You can get free NANOs or nyanos through a faucet. Just paste this address into the faucet pages:\n\n${address}`);
-      })
-      .row()
       .url("Top-up my tipping wallet", await getTopupUrl(ctx))
+      .row()
+      .url("How to setup Natrium", "https://www.youtube.com/watch?v=D0dpUB0O6pk")
+      .row()
+      .url("Download Natrium (wallet app)","https://natrium.io")
+      .row()
+      .text("Get tipping wallet address", async (ctx) => {
+        const address = await getNanoAddress(ctx);
+        await ctx.reply(address);
+      })
       .row()
       .url("My Account on Block Explorer", await getBlockExplorerUrl(ctx))
       .row()
@@ -519,7 +526,7 @@ const accountBalanceMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext
 
 startMenu.register(infoWithdrawMenu);
 startMenu.register(infoLedgerMenu);
-accountBalanceMenu.register(infoFaucetMenu);
+startMenu.register(infoFaucetMenu);
 startMenu.register(accountBalanceMenu);
 
 const withdrawMenu: Menu<NyanoTipBotContext> = new Menu<NyanoTipBotContext>("withdraw-menu")
