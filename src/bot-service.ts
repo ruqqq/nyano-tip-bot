@@ -99,11 +99,38 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
     new Promise((resolve, reject) => {
       (async () => {
         try {
+          const textParams = {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "What's this?",
+                    url: `https://t.me/${ctx.me.username}?start`,
+                  },
+                ],
+              ],
+            },
+          };
           const msg = await ctx.reply(`Sending **${amountString.replace(/\./, "\\.")}** nyano to [${to.first_name}](tg://user?id=${to.id})\\.\\.\\.`, {
             parse_mode: "MarkdownV2",
             reply_to_message_id: replyToMessageId,
+            ...textParams,
           });
           const id = await TipService.tipUser(fromId, toId, amount);
+          await ctx.api.editMessageText(
+            msg.chat.id,
+            msg.message_id,
+            `Sending **[${amountString.replace(
+              /\./,
+              "\\."
+            )}](${TipService.getLinkForBlock(id)})** nyano to [${
+              to.first_name
+            }](tg://user?id=${to.id})\\.\\.\\.`,
+            {
+              parse_mode: "MarkdownV2",
+              ...textParams,
+            }
+          );
           await PendingTxService.put(id, {
             sendingTgUserId: fromId,
             receivingTgUserId: toId,
@@ -119,16 +146,7 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
             })\\!`,
             textParams: {
               parse_mode: "MarkdownV2",
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: "What's this?",
-                      url: `https://t.me/${ctx.me.username}?start`,
-                    },
-                  ],
-                ],
-              },
+              ...textParams,
             },
             action: "tip",
           });
