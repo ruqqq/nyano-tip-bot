@@ -7,3 +7,4 @@ db/
 test-db/
 work-cache-db/
 tg-username-db/
+pending-tx-db/
