@@ -23,9 +23,10 @@ bot.use(BotService.withdrawMenu);
 bot.command("balance", BotService.handleBalanceCommand);
 bot.command("withdraw", BotService.handleWithdrawBalance);
 bot.command("tip", BotService.handleMessage);
-bot.on("message", wrapNext(BotService.handleMessage));
 bot.command("start", BotService.handleStartCommand);
 bot.command("help", BotService.handleStartCommand);
+bot.on("message", wrapNext(BotService.handleMessage));
+bot.hears(/^\//, BotService.handleUnknownCommand);
 
 BotService.sendMessageOnTopUp(bot);
 

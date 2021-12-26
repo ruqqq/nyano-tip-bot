@@ -342,6 +342,14 @@ async function handleError(err: BotError<NyanoTipBotContext>) {
   )
 }
 
+async function handleUnknownCommand(ctx: NyanoTipBotContext) {
+  if (ctx.chat?.type === "private") {
+    await ctx.reply("Unknown command. Please try again, maybe there's a typo somewhere.", {
+      reply_to_message_id: ctx.msg?.message_id,
+    });
+  }
+}
+
 function sendMessageOnTopUp(bot: Bot<NyanoTipBotContext>) {
   TipService.subscribeToConfirmedTx({
     onTip: async (id, fromTgUserId, toTgUserId, status) => {
@@ -590,6 +598,7 @@ export const BotService = {
   handleStartCommand,
   handleWithdrawBalance,
   handleError,
+  handleUnknownCommand,
   sendMessageOnTopUp,
   startMenu,
   withdrawMenu,
