@@ -8,6 +8,7 @@ export type Account = {
   seedIndex: number;
   address: string;
   withdrawalAddress: null | string;
+  hasInteractedWithBot: boolean;
 }
 
 const lastSeedIndexLock = new AwaitLock();
@@ -15,7 +16,11 @@ const START_SEED_INDEX = 1001;
 
 async function getAccountByTgUserId(tgUserId: string): Promise<Account | null> {
   try {
-    return await db.get(`tg-${tgUserId}`);
+    const result = await db.get(`tg-${tgUserId}`);
+    return {
+      ...result,
+      hasInteractedWithBot: result.hasInteractedWithBot ?? false,
+    }
   } catch (e) {
     if (!(e instanceof NotFoundError)) {
       throw e;
@@ -27,7 +32,11 @@ async function getAccountByTgUserId(tgUserId: string): Promise<Account | null> {
 
 async function getAccountByAddress(address: string): Promise<Account | null> {
   try {
-    return await db.get(`address-${address}`);
+    const result = await db.get(`address-${address}`);
+    return {
+      ...result,
+      hasInteractedWithBot: result.hasInteractedWithBot ?? false,
+    }
   } catch (e) {
     if (!(e instanceof NotFoundError)) {
       throw e;
@@ -60,6 +69,7 @@ async function getAndIncrementLastSeedIndex(): Promise<number> {
 }
 
 async function saveAccount(account: Account): Promise<void> {
+  const existingAccount = await getAccountByTgUserId(account.tgUserId);
   try {
     await db.put(`tg-${account.tgUserId}`, account);
     await db.put(`address-${account.address}`, account);
@@ -67,6 +77,10 @@ async function saveAccount(account: Account): Promise<void> {
     try {
       await db.del(`tg-${account.tgUserId}`);
       await db.del(`address-${account.address}`);
+      if (existingAccount) {
+        await db.put(`tg-${existingAccount.tgUserId}`, existingAccount);
+        await db.put(`address-${existingAccount.address}`, existingAccount);
+      }
     } catch (e) {
       log.warn(e);
     }

@@ -138,11 +138,22 @@ async function getOrCreateAccount(tgUserId: string): Promise<Account> {
       seedIndex,
       address,
       withdrawalAddress: null,
+      hasInteractedWithBot: false,
     };
     await Accounts.saveAccount(account);
   }
 
   return account;
+}
+
+async function markAccountAsHasInteracted(tgUserId: string) {
+  const account = await getAccount(tgUserId);
+  if (!account.hasInteractedWithBot) {
+    await Accounts.saveAccount({
+      ...account,
+      hasInteractedWithBot: true,
+    });
+  }
 }
 
 type TxStatus = "pending" | "confirmed";
@@ -287,4 +298,5 @@ export const TipService = {
   getLinkForBlock,
   subscribeToConfirmedTx,
   processPendingTxs,
+  markAccountAsHasInteracted,
 };

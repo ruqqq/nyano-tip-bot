@@ -207,7 +207,6 @@ async function generateBalanceMessage(ctx: NyanoTipBotContext): Promise<string> 
 
   const from = ctx.from;
   const fromId = `${from.id}`;
-  const account = await TipService.getAccount(fromId);
   const { balance, pending } = await TipService.getBalance(fromId);
   const balanceFormatted = convert(balance.toString(), {
     from: Unit.raw,
@@ -340,6 +339,7 @@ async function handleStartCommand(ctx: NyanoTipBotContext) {
 
   if (!ctx.match) {
     await ctx.reply(startText, { parse_mode: "MarkdownV2", reply_markup: startMenu });
+    await TipService.markAccountAsHasInteracted(`${ctx.from.id}`);
   } else if (ctx.match === "topup") {
     await ctx.reply(await generateBalanceMessage(ctx), { reply_markup: accountBalanceMenu });
   }

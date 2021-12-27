@@ -53,6 +53,7 @@ describe("BotService", () => {
           address: "nanoAddress",
           tgUserId: `${user1.id}`,
           withdrawalAddress: null,
+          hasInteractedWithBot: true,
         });
       when(TipService.getBalance)
         .calledWith(`${user1.id}`)
@@ -96,6 +97,7 @@ You can top-up to your tipping account from your personal wallet (e.g. Natrium a
           address: "nanoAddress",
           tgUserId: `${user1.id}`,
           withdrawalAddress: null,
+          hasInteractedWithBot: false,
         });
       when(TipService.getBalance)
         .calledWith(`${user1.id}`)
@@ -713,6 +715,7 @@ You can top-up to your tipping account from your personal wallet (e.g. Natrium a
           address: "nanoAddress",
           tgUserId: `${user1.id}`,
           withdrawalAddress: null,
+          hasInteractedWithBot: true,
         });
       when(TipService.getBalance)
         .calledWith(`${user1.id}`)

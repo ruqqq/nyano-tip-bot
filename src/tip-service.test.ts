@@ -13,6 +13,7 @@ describe("TipService", () => {
     address: "nanoAddress1",
     seedIndex: 1,
     withdrawalAddress: null,
+    hasInteractedWithBot: false,
   };
   const account1KeyMetadata = {
     secretKey: "secretKey",
@@ -24,6 +25,7 @@ describe("TipService", () => {
     address: "nanoAddress2",
     seedIndex: 2,
     withdrawalAddress: null,
+    hasInteractedWithBot: false,
   };
   const account2KeyMetadata = {
     secretKey: "secretKey2",

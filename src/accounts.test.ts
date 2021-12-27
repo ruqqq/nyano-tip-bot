@@ -6,7 +6,8 @@ describe("Accounts", () => {
     tgUserId: "test-tgUserId",
     seedIndex: 0,
     address: "some address",
-    withdrawalAddress: null
+    withdrawalAddress: null,
+    hasInteractedWithBot: true,
   };
 
   beforeEach(async () => {
@@ -53,7 +54,8 @@ describe("Accounts", () => {
       tgUserId: "test-tgUserId-new",
       seedIndex: 0,
       address: "some address-new",
-      withdrawalAddress: null
+      withdrawalAddress: null,
+      hasInteractedWithBot: false,
     };
 
     afterEach(async () => {
