@@ -1,7 +1,7 @@
 import { Bot, BotError, GrammyError, HttpError, NextFunction } from "grammy";
 import { convert, Unit, checkAddress } from "nanocurrency";
 import { NyanoTipBotContext } from "./context";
-import { BusinessErrors } from "./errors";
+import { BusinessError, BusinessErrors } from "./errors";
 import { TipService } from "./tip-service";
 import log from "loglevel";
 import { User } from "@grammyjs/types";
@@ -353,7 +353,16 @@ async function handleError(err: BotError<NyanoTipBotContext>) {
   const ctx = err.ctx;
   log.error(`Error while handling update ${ctx.update.update_id}:`);
   const e = err.error;
-  if (e instanceof GrammyError) {
+  if (e instanceof BusinessError) {
+    log.error("Error in request:", e);
+    await ctx.reply(
+      e.message,
+      {
+        reply_to_message_id: ctx.update.message?.message_id,
+      }
+    )
+    return;
+  } else if (e instanceof GrammyError) {
     log.error("Error in request:", e.description);
   } else if (e instanceof HttpError) {
     log.error("Could not contact Telegram:", e);
