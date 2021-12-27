@@ -434,12 +434,15 @@ You can top-up to your tipping account from your personal wallet (e.g. Natrium a
         .rejects.toThrow(BusinessErrors.NO_DECIMAL_PLACES);
     });
 
-    it("should tip recipient 10 nyano when 'thanks for the help!! !tip' is sent as a reply to a message", async () => {
+    it.each([
+      "thanks for the help!!\n\n!tip",
+      "thanks for the help!! !tip",
+    ])("should tip recipient 10 nyano when '%s' is sent as a reply to a message", async (text) => {
       const user1 = createTgUser();
       const user2 = createTgUser();
       const message = createTgMessage({
         from: user1,
-        text: "thanks for the help!! !tip",
+        text,
         reply_to_message: {
           ...createTgMessage(),
           from: user2,
