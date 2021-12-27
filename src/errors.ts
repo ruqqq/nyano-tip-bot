@@ -15,11 +15,11 @@ export class BusinessError extends Error {
 export const BusinessErrors = {
   INSUFFICIENT_BALANCE: new BusinessError(
     BusinessErrorCode.INSUFFICIENT_BALANCE,
-    "Insufficient balance"
+    "Insufficient balance."
   ),
   NO_DECIMAL_PLACES: new BusinessError(
     BusinessErrorCode.NO_DECIMAL_PLACES,
-    "Only whole numbers are allowed",
+    "Only whole numbers are allowed.",
   )
 };
 
