@@ -90,6 +90,10 @@ async function handleMessage(ctx: NyanoTipBotContext): Promise<void> {
       return;
     }
 
+    if (amountString.indexOf(".") > -1) {
+      throw BusinessErrors.NO_DECIMAL_PLACES;
+    }
+
     const toId = `${to.id}`;
     const amount = BigInt(convert(amountString, { from: Unit.nano, to: Unit.raw }));
 

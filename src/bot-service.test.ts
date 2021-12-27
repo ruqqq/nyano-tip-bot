@@ -411,7 +411,7 @@ You can top-up to your tipping account from your personal wallet (e.g. Natrium a
       );
     });
 
-    it("should tip recipient 10.5 nyano when 'thanks! !tip 10.5' is sent as a reply to a message", async () => {
+    it("should not tip recipient when 'thanks! !tip 10.5' is sent as a reply to a message", async () => {
       const user1 = createTgUser();
       const user2 = createTgUser();
       const message = createTgMessage({
@@ -423,50 +423,15 @@ You can top-up to your tipping account from your personal wallet (e.g. Natrium a
           reply_to_message: undefined,
         },
       });
-      when(TipService.getBalance)
-        .calledWith(`${user2.id}`)
-        .mockResolvedValue({ balance: 10500000000000000000000000n, pending: 0n });
-      when(TipService.tipUser)
-        .calledWith(`${user1.id}`, `${user2.id}`, 10500000000000000000000000n)
-        .mockResolvedValue("id");
-      when(TipService.getLinkForBlock)
-        .calledWith("id")
-        .mockReturnValue("http://block-url.com");
 
       const ctx = createContext(
         createTgUpdate({
           message,
         })
       );
-      await BotService.handleMessage(ctx);
-      await new Promise(r => setTimeout(r, 0));
 
-
-      expect(PendingTxService.put).toHaveBeenCalledWith(
-        "id",
-        expect.objectContaining({
-          sendingTgUserId: expect.anything(),
-          receivingTgUserId: expect.anything(),
-          amount: "10.5",
-          id: "id",
-          chatId: expect.anything(),
-          messageId: expect.anything(),
-          text: `**[10\\.5](http://block-url.com)** nyano sent to [${message.reply_to_message?.from?.first_name}](tg://user?id=${message.reply_to_message?.from?.id})\\!`,
-          textParams: {
-            parse_mode: "MarkdownV2",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: "What's this?",
-                    url: `https://t.me/bot_username?start`,
-                  },
-                ],
-              ],
-            },
-          }
-        }),
-      );
+      expect(BotService.handleMessage(ctx))
+        .rejects.toThrow(BusinessErrors.NO_DECIMAL_PLACES);
     });
 
     it("should tip recipient 10 nyano when 'thanks for the help!! !tip' is sent as a reply to a message", async () => {
